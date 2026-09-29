@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+venv/
+.venv/
+
+# 大体积本地模型（约 2GB，首次运行时由程序按需下载，勿提交）
+backend/data/models/
+
+# HuggingFace 等下载缓存
+**/.cache/
+
+# 用户运行时数据（config.toml 内含 API Key，切勿提交；首次运行自动生成）
+backend/data/config.toml
+backend/data/history.json
+backend/data/reports/
+
+# 设计文档（不公开）
+docs/
+
+# 日志
+*.log
+
+# 系统 / 编辑器
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

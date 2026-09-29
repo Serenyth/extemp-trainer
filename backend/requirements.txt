@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+websockets   # uvicorn 的 WebSocket 实现；缺失时会以 ws=none 运行，所有 ws:// 请求返回 404
+python-multipart
+numpy
+tomli-w
+pyyaml
+openai
+faster-whisper
+
+# 可选：中文语音引擎（依赖较大，需要时自行安装）
+# funasr
+# torch
+# torchaudio
