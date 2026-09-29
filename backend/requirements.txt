@@ -7,8 +7,9 @@ tomli-w
 pyyaml
 openai
 faster-whisper
+sherpa-onnx    # 中文语音引擎（流式 Zipformer / 离线 SenseVoice、Paraformer 等）
 
-# 可选：中文语音引擎（依赖较大，需要时自行安装）
+# 可选：其他语音引擎（依赖较大，需要时自行安装）
 # funasr
 # torch
 # torchaudio
