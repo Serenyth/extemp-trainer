@@ -230,7 +230,7 @@ WebSocket 协议要点：客户端发 `{"type":"start","engine":"sherpa","model"
 有停顿却被频繁切开 → 调大「断句等待」；一直连贯说话也被加句号 → 调大「最长一句」（这是 rule3 强制断句在起作用，与停顿无关）。
 
 **Q：sherpa 引擎报 `No module named 'sherpa_onnx'`？**
-说明虚拟环境是在旧版依赖清单下创建的，在虚拟环境中执行 `pip install -r requirements.txt` 补装后重启服务即可。
+在虚拟环境中执行 `pip install -r requirements.txt` 补装后重启服务即可。
 
 **Q：AI 点评不出现？**
 检查「设置 → AI」中的 Base URL、API Key 与模型名是否正确；未配置 AI 时转写、计分和词汇统计仍可正常使用。

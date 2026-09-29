@@ -28,3 +28,7 @@ docs/
 Thumbs.db
 .vscode/
 .idea/
+
+# 本地临时调试文件
+/_*.txt
+/_*.bat

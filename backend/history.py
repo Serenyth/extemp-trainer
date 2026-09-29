@@ -28,12 +28,18 @@ def _write_all(items: list):
     tmp.replace(HISTORY_PATH)
 
 
-def add(entry: dict) -> dict:
+def add(entry: dict, keep: int = 500) -> dict:
     entry.setdefault("id", f"{int(time.time()*1000)}")
     entry.setdefault("date", time.strftime("%Y-%m-%dT%H:%M:%S"))
     items = _read_all()
     items.insert(0, entry)
-    _write_all(items[:500])
+    # 报告是按 id 单独存 md 的，被截掉的那条的报告文件也一并清掉，免得越攒越多
+    for dropped in items[max(0, int(keep) or 500):]:
+        p = REPORTS_DIR / f"{dropped.get('id')}.md"
+        if p.exists():
+            try: p.unlink()
+            except OSError: pass
+    _write_all(items[:max(1, int(keep) or 500)])
     return entry
 
 

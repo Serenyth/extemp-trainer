@@ -1,5 +1,6 @@
 """AI 逐句分析 + 报告生成（OpenAI 兼容 API）"""
 import json
+import random
 
 import config
 
@@ -53,6 +54,67 @@ INCREMENTAL_PROMPT = """你是严格的中文演讲教练。用户正在做即�
 2. 是否结论先行、是否有犹豫词/笼统词
 3. 是否跑题
 没问题就返回空 issues 和空 suggestion。"""
+
+# 开讲时的「表达提示」：段落级自动提醒，短，瞄一眼就够
+HINT_PROMPT = """你是中文即席演讲教练。用户正在**边说边练**，只能瞄一眼屏幕，没空读长文。
+
+命题：{topic}
+他最近讲的内容：
+{recent}
+你已经提示过的话（不要重复）：{hints}
+
+从下面四类里挑**最要紧的一条**，给出一句提示。都不成立就返回空 hint。
+
+1. off_topic：偏题了、在绕圈子 → 拉回命题，指明该回到什么
+2. no_example：连着讲抽象道理，没有具体人/事/数据 → 提醒补一个例子
+3. structure：句式重复、结构松散、没有结论 → 指出来
+4. direction：内容没问题 → 给「接下来往哪讲」的建议（基于他已说的内容延伸，不要凭空开新话题）
+
+只输出 JSON（不要代码块）：
+{{
+ "kind": "跑题|缺例子|结构|方向",
+ "hint": "一条提示，不超过 15 个字，给方向不给改写，不要复述他说过的话"
+}}
+
+硬性要求：
+- hint 必须 ≤15 个汉字，口语化，像场边教练递的一句话
+- 不要打分、不要夸奖、不要写"你可以尝试"这类套话开头
+- 已经提示过的方向不要重复"""
+
+# 点「提示」按钮要的具体建议：这时他卡住了，需要知道"有什么可说的"
+DETAIL_PROMPT = """你是中文即席演讲教练。用户做即席演讲训练时**卡住了，主动点了「提示」**。
+他要的不是点评，是"接下来我有什么可说的"——要具体到能直接开口讲。
+
+命题：{topic}
+他备稿时记的要点（这是他自己想好的思路，优先沿着它给建议）：
+{notes}
+他最近讲的内容：
+{recent}
+已经提示过的话（不要重复，不要换说法再说一遍）：{hints}
+
+只输出 JSON（不要代码块）：
+{{
+ "kind": "方向|内容|例子|收尾",
+ "hint": "具体到能直接开口讲的一条建议，{max_chars} 字以内"
+}}
+
+给建议的思路（按顺序挑最合适的）：
+1. 他备稿要点里**还没讲到的条目** → 直接告诉他"你还有 XX 没讲"，把那条要点摊开说
+2. 他讲到的那一点**可以往哪再深一层**：追问、反面、后果
+3. 缺具体人/事/数据 → 给一个他能马上补的例子方向（结合命题，不要瞎编细节）
+4. 讲够久了 → 提示收尾，给一句怎么收
+
+硬性要求：
+- 必须结合命题和他的要点，不要给放之四海皆准的套话（禁止"你可以从个人经历出发"这类）
+- 直接说内容，不要夸奖、不要打分、不要用"你可以考虑/尝试"开头
+- {max_chars} 字以内，宁短勿长"""
+
+HINT_FALLBACK = [
+    "接着刚才的例子再往深说一层",
+    "给一个具体的人或场景",
+    "回到命题上，别铺太开",
+    "先给结论，再补理由",
+]
 
 REPORT_PROMPT = """你是演讲教练，基于以下训练数据为用户写一份脱稿训练报告。直接输出 Markdown 正文（不要代码块包裹），语气直接、具体、不空夸。
 
@@ -140,6 +202,53 @@ def analyze_incremental(topic: str, sentence: str, context: str) -> dict:
         temperature=0.2,
     )
     return _extract_json(resp.choices[0].message.content)
+
+
+def analyze_hint(topic: str, recent: str, hints: list = None, manual: bool = False,
+                 notes: str = "") -> dict:
+    """开讲过程中的「表达提示」
+
+    自动触发（段落级）：一句 ≤15 字的当场可用提醒，瞄一眼就够。
+    manual=True（点了「提示」按钮）：他卡住了，要的是"接下来有什么可说的"——
+    结合备稿要点和命题给具体内容，可以长一些（coach.max_chars，默认 40 字）。
+    """
+    client, err = _client()
+    if err:
+        raise RuntimeError(err)
+    cfg = config.load()
+    model = cfg["ai"]["model"]
+    coach = cfg.get("coach", {})
+    max_chars = int(coach.get("max_chars") or 40) if manual else 15
+    custom = (coach.get("prompt") or "").strip()
+    tpl = custom or (DETAIL_PROMPT if manual else HINT_PROMPT)
+    given = (hints or [])[-4:]
+    fmt = dict(
+        topic=topic or "（自由命题）",
+        recent=(recent or "（还没说话）")[-600:],
+        hints="；".join(given) if given else "（暂无）",
+        notes=(notes or "").strip()[:600] or "（备稿时没记要点）",
+        max_chars=max_chars,
+    )
+    try:
+        content = tpl.format(**fmt)
+    except (KeyError, IndexError):
+        content = f"{tpl}\n\n命题：{topic}\n最近内容：{recent}\n备稿要点：{notes}"
+    resp = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": content}],
+        temperature=0.6,
+        timeout=20,
+    )
+    try:
+        r = _extract_json(resp.choices[0].message.content)
+    except Exception:
+        raw = (resp.choices[0].message.content or "").strip().splitlines()[0][:max_chars]
+        return {"kind": "方向", "hint": raw or random.choice(HINT_FALLBACK), "manual": manual}
+    hint = str(r.get("hint") or "").strip().splitlines()[0][:max_chars]
+    if not hint:
+        # 自动触发时四类都不成立就干脆不打扰；手动求助必须给点东西
+        hint = random.choice(HINT_FALLBACK) if manual else ""
+    return {"kind": str(r.get("kind") or "提示"), "hint": hint, "manual": manual}
 
 
 def generate_report(topic: str, score: int, forget: int, peek: int, dur: int,

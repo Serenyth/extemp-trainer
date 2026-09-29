@@ -159,15 +159,14 @@ body.immersive .chrome{opacity:.14} body.immersive .chrome:hover{opacity:1}
 
 .mic-note{font-family:var(--mono);font-size:12px;color:var(--amber);letter-spacing:.1em;margin-bottom:24px;display:none}
 .mic-note.show{display:block}
-/* 汇报页三栏：左统计 / 中大字稿 / 右教练(80%)+时间按钮 */
+/* 汇报页两栏：左统计 / 右大字稿 + 表达提示 + 时间按钮 */
 #stage-speak .stage-inner{height:100%}
-.speak-grid{display:grid;grid-template-columns:210px minmax(0,1fr) 330px;gap:30px;align-items:stretch;width:100%;flex:1;min-height:0}
-@media(max-width:1180px){.speak-grid{grid-template-columns:180px minmax(0,1fr) 280px;gap:22px}}
+.speak-grid{display:grid;grid-template-columns:210px minmax(0,1fr);gap:30px;align-items:stretch;width:100%;flex:1;min-height:0}
+@media(max-width:1180px){.speak-grid{grid-template-columns:180px minmax(0,1fr);gap:22px}}
 @media(max-width:900px){
   #stage-speak .stage-inner{height:auto}
   .speak-grid{grid-template-columns:1fr;gap:16px}
   .speak-col.side-center{order:-1}
-  .side-right{flex-direction:column-reverse}
 }
 .speak-col{text-align:left;min-height:0;display:flex;flex-direction:column}
 .speak-col.side-center{text-align:center}
@@ -197,38 +196,40 @@ body.immersive .chrome{opacity:.14} body.immersive .chrome:hover{opacity:1}
 .ls-row{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;color:var(--muted);padding:9px 0;border-bottom:1px solid var(--line)}
 .ls-row b{font-family:var(--mono);font-weight:500;font-size:19px;color:var(--ink);font-variant-numeric:tabular-nums}
 .ls-row.ls-f b{color:var(--filler)}.ls-row.ls-h b{color:var(--hedging)}.ls-row.ls-v b{color:var(--vague)}
+.ls-row b small{font-family:var(--sans);font-size:12px;font-weight:400;color:var(--faint);margin-left:3px}
+/* 开讲页也能看见分：扣分实时反映，不用等结算。放在计时器那一行左侧 */
+.ls-score{display:flex;align-items:baseline;gap:10px}
+.ls-score>span{font-family:var(--mono);font-size:12px;letter-spacing:.3em;color:var(--faint)}
+.ls-score b{font-family:var(--mono);font-weight:600;font-size:26px;line-height:1;color:var(--ink);font-variant-numeric:tabular-nums}
+.ls-score.warn b{color:var(--amber)}.ls-score.bad b{color:var(--red)}
+.ls-sub{font-family:var(--mono);font-size:14px;font-weight:600;letter-spacing:.2em;color:var(--ink);margin-top:18px;padding-bottom:4px}
 .ls-habits{font-size:12.5px;color:var(--faint);margin-top:14px;line-height:1.9}
 .live-legend{display:flex;flex-direction:column;gap:9px;margin-top:16px}
 .live-legend .legend-item{width:fit-content;font-size:12.5px}
-/* 实时教练面板：占右栏 80% 高度，配色明显 */
-.coach-box{
-  flex:1 1 80%;min-height:0;text-align:left;margin:0;
-  display:flex;flex-direction:column;
-  border:1px solid var(--line-strong);border-radius:12px;padding:14px 16px;
-  background:color-mix(in srgb,var(--amber) 5%,transparent);
+/* 表达提示：挂在字稿下方，一次只显示一条，新的顶掉旧的 */
+.speak-hint{
+  flex:0 0 auto;margin-top:12px;width:100%;text-align:left;
+  display:flex;align-items:flex-start;gap:12px;
+  border:1px solid var(--amber);border-radius:10px;padding:12px 16px;
+  background:color-mix(in srgb,var(--amber) 13%,transparent);
+  animation:hintIn .35s var(--ease);
 }
-.coach-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
-.coach-head .ph{font-family:var(--mono);font-size:12px;letter-spacing:.28em;color:var(--amber);font-weight:600}
-.coach-toggle{font-family:var(--mono);font-size:12px;letter-spacing:.15em;color:var(--green);cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px}
-.coach-toggle::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor}
-.coach-toggle.off{color:var(--red);opacity:1}
-.coach-list{display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0;flex:1;padding-right:2px}
-.coach-item{
-  border-left:3px solid var(--green);border-radius:0 8px 8px 0;
-  background:color-mix(in srgb,var(--green) 9%,transparent);
-  padding:11px 14px;font-size:var(--coach-size,13.5px);line-height:1.85;animation:coachIn .4s var(--ease);
-}
-.coach-item.sev-warn{border-color:var(--amber);background:color-mix(in srgb,var(--amber) 13%,transparent)}
-.coach-item.sev-error{border-color:var(--red);background:color-mix(in srgb,var(--red) 13%,transparent)}
-.coach-item .ci-q{color:var(--ink);font-size:.96em;font-family:var(--serif);font-weight:600}
-.coach-item .ci-n{color:var(--muted)}
-.coach-item .ci-s{color:var(--green)}
-.coach-item.sev-warn .ci-s{color:var(--amber)}
-.coach-item.sev-error .ci-s{color:var(--red)}
-.coach-item.pending{opacity:.55}
-@keyframes coachIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
-/* 右栏下方控制区：时间 + 减分 + 结束 */
+.speak-hint[hidden]{display:none}
+.speak-hint .hk{flex:none;font-family:var(--mono);font-size:12px;letter-spacing:.18em;color:var(--amber);padding-top:4px}
+.speak-hint .ht{flex:1;min-width:0;font-family:var(--sans);font-size:var(--hint-size,15px);line-height:1.7;color:var(--ink)}
+.speak-hint{cursor:pointer}
+.speak-hint .hx{flex:none;font-family:var(--mono);font-size:15px;line-height:1;color:var(--faint);padding-top:3px}
+.speak-hint .hx:hover{color:var(--ink)}
+/* 本地即时信号（语速/口头禅）：红 */
+.speak-hint.loc{border-color:var(--filler);background:color-mix(in srgb,var(--filler) 12%,transparent)}
+.speak-hint.loc .hk{color:var(--filler)}
+/* 方向提示（点「提示」换来的具体内容建议）：蓝，跟 AI 段落建议的琥珀分开 */
+.speak-hint.dir{border-color:var(--vague);background:color-mix(in srgb,var(--vague) 15%,transparent)}
+.speak-hint.dir .hk{color:var(--vague)}
+@keyframes hintIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+/* 主列下方控制区：分数 + 时间 + 减分 + 结束 */
 .speak-controls{flex:0 0 auto;margin-top:auto}
+.ctrl-top{display:flex;align-items:baseline;justify-content:space-between;gap:20px}
 .speak-btns{display:flex;gap:8px;margin-top:14px}
 .speak-btns .text-btn{flex:1;min-width:0;border:1px solid var(--line);padding:10px 0;letter-spacing:.18em}
 .speak-btns .text-btn:hover{color:var(--ink);border-color:var(--line-strong)}
@@ -356,6 +357,9 @@ mk.v{border-color:var(--vague);color:var(--vague)}
 .set-cat-tag{font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:var(--faint);float:right;margin-top:2px}
 .set-sec{border-bottom:1px solid var(--line);padding:20px 0}
 .set-sec h3{font-family:var(--mono);font-size:12px;letter-spacing:.3em;color:var(--faint);margin-bottom:16px}
+/* 同一类的连续子块：不画线，视觉上合成一组，只有末尾那块下面有线 */
+.set-sec.sub{border-bottom:none;padding-bottom:10px}
+.set-sec.sub h3{color:var(--muted);font-size:13px;letter-spacing:.2em;margin-bottom:12px}
 .set-row{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:12px}
 .set-row label{font-size:13px;color:var(--muted);flex-shrink:0}
 .set-row input[type=text],.set-row input[type=password],.set-row input[type=number],.set-row select{
@@ -527,8 +531,13 @@ mk.v{border-color:var(--vague);color:var(--vague)}
           <aside class="speak-col side-left">
             <div class="live-title">实时统计</div>
             <div class="live-stats" id="liveStats">
-              <div class="ls-row"><span>时长</span><b id="lsDur">0:00</b></div>
               <div class="ls-row"><span>字数</span><b id="lsChars">0</b></div>
+              <div class="ls-row"><span>语速</span><b><span id="lsWpm">—</span><small>字/分</small></b></div>
+              <div class="ls-sub">卡壳</div>
+              <div class="ls-row"><span>次数</span><b id="lsStuck">0</b></div>
+              <div class="ls-row"><span>平均</span><b id="lsStuckAvg">0:00</b></div>
+              <div class="ls-row"><span>总时长</span><b id="lsStuckTot">0:00</b></div>
+              <div class="ls-sub">词汇</div>
               <div class="ls-row ls-f"><span>填充词</span><b id="lsFiller">0</b></div>
               <div class="ls-row ls-h"><span>犹豫词</span><b id="lsHedge">0</b></div>
               <div class="ls-row ls-v"><span>笼统词</span><b id="lsVague">0</b></div>
@@ -537,30 +546,27 @@ mk.v{border-color:var(--vague);color:var(--vague)}
             <div class="live-legend" id="liveLegend"></div>
           </aside>
 
-          <!-- 中：大字稿（实时标记） -->
+          <!-- 右：大字稿 + 表达提示 + 时间/按钮 -->
           <div class="speak-col side-center">
             <div class="subtitle-box" id="subtitleBox"><span class="ph">实时转写</span></div>
-          </div>
-
-          <!-- 右：实时教练（占80%）+ 下方时间/按钮 -->
-          <aside class="speak-col side-right">
-            <div class="coach-box" id="coachBox" style="display:none">
-              <div class="coach-head"><span class="ph">实时教练</span><span class="coach-toggle" id="coachToggle">点评 开</span></div>
-              <div class="coach-list" id="coachList"></div>
+            <div class="speak-hint" id="speakHint" hidden>
+              <span class="hk" id="hintKind">提示</span>
+              <span class="ht" id="hintText"></span>
+              <span class="hx" id="hintClose">×</span>
             </div>
             <div class="speak-controls">
               <div class="rec-row"><span class="rec-dot" id="recDot"></span><span class="speak-time" id="speakTime">00:00</span></div>
               <div class="rec-label" id="recLabel">REC · 不低头 · 不看稿</div>
               <div class="penalty-col">
-                <button class="penalty forget" id="forgetBtn">
-                  <span class="pc" id="forgetCount"></span>
-                  <span class="pl">忘词</span>
-                  <span class="rule" id="forgetRule">− 5 / 次</span>
-                </button>
                 <button class="penalty peek" id="peekBtn">
                   <span class="pc" id="peekCount"></span>
                   <span class="pl">看稿</span>
                   <span class="rule" id="peekRule">− 10 / 次</span>
+                </button>
+                <button class="penalty hint" id="hintBtn">
+                  <span class="pc" id="hintCount"></span>
+                  <span class="pl">提示</span>
+                  <span class="rule" id="hintRule">− 5 / 次</span>
                 </button>
               </div>
               <div class="speak-btns">
@@ -568,7 +574,7 @@ mk.v{border-color:var(--vague);color:var(--vague)}
                 <button class="text-btn accent" id="endSpeakBtn">结束汇报</button>
               </div>
             </div>
-          </aside>
+          </div>
         </div>
       </div>
       <!-- 开讲前的准备倒计时：点数可在设置里改，点任意处或按空格立即开始 -->
@@ -609,8 +615,12 @@ mk.v{border-color:var(--vague);color:var(--vague)}
             </div>
             <div class="stat-row" style="justify-content:center">
               <div class="stat-cell"><div class="sv" id="statDur">0:00</div><div class="sk">时长</div></div>
-              <div class="stat-cell"><div class="sv pen" id="statForget">0</div><div class="sk">忘词</div></div>
+              <div class="stat-cell"><div class="sv" id="statWpm">—</div><div class="sk">语速</div></div>
+              <div class="stat-cell"><div class="sv pen" id="statStuck">0</div><div class="sk">卡壳</div></div>
+              <div class="stat-cell"><div class="sv pen" id="statStuckAvg">0:00</div><div class="sk">平均卡壳</div></div>
+              <div class="stat-cell"><div class="sv pen" id="statStuckTot">0:00</div><div class="sk">卡壳总时长</div></div>
               <div class="stat-cell"><div class="sv pen" id="statPeek">0</div><div class="sk">看稿</div></div>
+              <div class="stat-cell"><div class="sv pen" id="statHint">0</div><div class="sk">提示</div></div>
             </div>
             <div class="audio-wrap" id="audioWrap" style="display:none;margin:18px auto 0">
               <div class="audio-label">回放 · 仅存于本页内存</div>
@@ -676,9 +686,11 @@ mk.v{border-color:var(--vague);color:var(--vague)}
     <div class="set-sec" data-cat="界面">
       <h3>显示</h3>
       <div class="set-row"><label>字稿文本大小（px）</label><input type="number" id="dSubtitle" min="16" max="64" value="30"></div>
-      <div class="set-row"><label>实时教练文本大小（px）</label><input type="number" id="dCoach" min="10" max="28" step="0.5" value="13.5"></div>
+      <div class="set-row"><label>表达提示文本大小（px）</label><input type="number" id="dCoach" min="10" max="28" step="0.5" value="15"></div>
       <div class="set-row"><label>转写每句换行</label><select id="dNewline"><option value="true">开</option><option value="false">关</option></select></div>
       <div class="set-row"><label>句末标点</label><select id="dPunct"><option value="true">显示</option><option value="false">隐藏</option></select></div>
+      <div class="set-row"><label>抽题音效</label><select id="dSfx"><option value="true">开</option><option value="false">关</option></select></div>
+      <div class="set-row"><label>历史保留条数</label><input type="number" id="dKeep" min="20" max="2000" step="10" value="200"></div>
       <div class="set-actions"><button class="save-btn" id="displaySaveBtn">保存</button></div>
     </div>
     <div class="set-sec" data-cat="AI">
@@ -693,16 +705,19 @@ mk.v{border-color:var(--vague);color:var(--vague)}
       </div>
       <datalist id="modelList"></datalist>
       <div class="set-row"><label>超时（秒）</label><input type="number" id="aiTimeout" value="60"></div>
+      <div class="set-row"><label>讲完自动分析</label><select id="aiAuto"><option value="false">关</option><option value="true">开</option></select></div>
       <div class="set-actions"><button class="save-btn" id="aiSaveBtn">保存</button></div>
       <p class="set-hint">兼容 OpenAI 接口的服务均可用（DeepSeek / 通义 / Kimi / 本地 Ollama 等）</p>
     </div>
     <div class="set-sec" data-cat="AI">
-      <h3>实时教练</h3>
-      <div class="set-row"><label>点评频率（句）</label><input type="number" id="cEvery" min="1" max="20" value="1"></div>
+      <h3>表达提示</h3>
+      <div class="set-row"><label>每隔几句提示一次</label><input type="number" id="cEvery" min="1" max="20" value="3"></div>
       <div class="set-row"><label>最短句长（字）</label><input type="number" id="cMin" min="2" max="50" value="8"></div>
+      <div class="set-row"><label>方向提示字数上限</label><input type="number" id="cMax" min="12" max="120" value="40"></div>
+      <div class="set-row"><label>提示停留（秒）</label><input type="number" id="cHold" min="0" max="120" value="24"></div>
       <div class="set-row" style="align-items:flex-start"><label style="padding-top:6px">提示词</label>
         <textarea id="cPrompt" class="coach-prompt" spellcheck="false"
-          placeholder="留空则使用内置提示词。可用占位符：{topic} 命题、{context} 已说过的内容、{sentence} 最新一句"></textarea>
+          placeholder="留空则使用内置提示词。可用占位符：{topic} 命题、{recent} 最近讲的内容、{hints} 已提示过的话"></textarea>
       </div>
       <div class="set-actions">
         <button class="save-btn" id="coachSaveBtn">保存</button>
@@ -737,17 +752,30 @@ mk.v{border-color:var(--vague);color:var(--vague)}
       <div class="set-actions"><button class="save-btn" id="speechSaveBtn">保存</button></div>
     </div>
     <div class="set-sec" data-cat="训练">
-      <h3>训练参数</h3>
+      <h3>计分</h3>
       <div class="set-row"><label>基础分</label><input type="number" id="tBase" value="100"></div>
-      <div class="set-row"><label>忘词扣分/次</label><input type="number" id="tForget" value="5"></div>
       <div class="set-row"><label>看稿扣分/次</label><input type="number" id="tPeek" value="10"></div>
-      <div class="set-row"><label>看稿时长/次（秒）</label><input type="number" id="tPeekDur" min="1" max="30" value="3"></div>
-      <div class="set-row"><label>备稿时长（分）</label><input type="text" id="tDurs" placeholder="5,10,20,30"></div>
+      <div class="set-row"><label>提示扣分/次</label><input type="number" id="tHint" value="5"></div>
       <div class="set-row"><label>填充词计入扣分</label><select id="tFillerOn"><option value="false">关闭</option><option value="true">开启</option></select></div>
       <div class="set-row"><label>填充词阈值/分钟</label><input type="number" id="tFillerTh" value="8"></div>
+      <div class="set-actions"><button class="save-btn train-save">保存</button></div>
+    </div>
+    <div class="set-sec" data-cat="训练">
+      <h3>节奏</h3>
+      <div class="set-row"><label>备稿时长（分）</label><input type="text" id="tDurs" placeholder="5,10,20,30"></div>
       <div class="set-row"><label>开讲准备倒计时（秒）</label><input type="number" id="tReady" min="0" max="30" value="3"></div>
       <div class="set-row"><label>自动开讲倒计时（秒）</label><input type="number" id="tAutoStart" min="0" max="60" value="5"></div>
-      <div class="set-actions"><button class="save-btn" id="trainSaveBtn">保存</button></div>
+      <div class="set-row"><label>看稿时长/次（秒）</label><input type="number" id="tPeekDur" min="1" max="30" value="3"></div>
+      <div class="set-row"><label>看稿/提示自动暂停</label><select id="tAutoPause"><option value="true">开</option><option value="false">关</option></select></div>
+      <div class="set-actions"><button class="save-btn train-save">保存</button></div>
+    </div>
+    <div class="set-sec" data-cat="训练">
+      <h3>实时信号</h3>
+      <div class="set-row"><label>卡壳判定（秒）</label><input type="number" id="tStuckSec" min="1" max="30" value="3"></div>
+      <div class="set-row"><label>语速过快（字/分）</label><input type="number" id="tWpmFast" min="120" max="600" value="330"></div>
+      <div class="set-row"><label>语速过慢（字/分）</label><input type="number" id="tWpmSlow" min="0" max="400" value="0"></div>
+      <div class="set-row"><label>口头禅密集次数</label><input type="number" id="tBurst" min="2" max="10" value="3"></div>
+      <div class="set-actions"><button class="save-btn train-save">保存</button></div>
     </div>
     <div class="set-sec" data-cat="训练">
       <h3>词表（每类用逗号分隔）</h3>
@@ -822,8 +850,10 @@ const S = {
   cfg: null, bank: {}, words: {},
   cat: '全部混合', topic: '', topicCat: '',
   prepTotal: 600, prepLeft: 600, prepTimer: null,
-  outline: [], otTpl: 'three',
-  forget: 0, peek: 0, speakStart: 0, speakTimer: null, speaking: false,
+  outline: [], otTpl: 'three', warmed: false, loading: false,
+  hint: 0, hintsGiven: [], hintTimer: null, _rate: [],
+  peek: 0, speakStart: 0, speakTimer: null, speaking: false,
+  stuck: 0, stuckMs: 0, stuckOpen: false, stuckFrom: 0, lastTextAt: 0,
   // 暂停/准备倒计时：speakElapsed 累计「已说话时长」，speakStart 为当前段的起点（暂停时置 null）
   speakElapsed: 0, paused: false, readying: false, readyTimer: null, _skipReady: null, _stream: null,
   autoTimer: null,
@@ -873,6 +903,55 @@ function setPhase(p){
 const bindFold = (f,h) => $(h).addEventListener('click', ()=>$(f).classList.toggle('open'));
 bindFold('catFold','catFoldHead'); bindFold('customFold','customFoldHead'); bindFold('notesFold','notesFoldHead');
 
+/* ================= 音效：Web Audio 现场合成，不依赖音频文件 ================= */
+let _sfxCtx = null;
+function sfxCtx(){
+  try{
+    if(!_sfxCtx){
+      const C = window.AudioContext || window.webkitAudioContext;
+      if(!C) return null;
+      _sfxCtx = new C();
+    }
+    if(_sfxCtx.state === 'suspended') _sfxCtx.resume();
+    return _sfxCtx;
+  }catch(e){ return null; }
+}
+const sfxOn = () => !S.cfg || !S.cfg.ui || S.cfg.ui.sfx !== false;
+/* 滚动的「嗒」：一小段带通白噪声，50ms 衰减。机械感来自噪声而不是乐音，
+   每次中心频率随机抖一点，避免连响时像电子音 */
+function sfxTick(v){
+  if(!sfxOn()) return;
+  const c = sfxCtx(); if(!c) return;
+  const len = 0.05, t = c.currentTime;
+  const buf = c.createBuffer(1, Math.max(1, Math.ceil(c.sampleRate*len)), c.sampleRate);
+  const d = buf.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i] = (Math.random()*2-1) * (1 - i/d.length);
+  const src = c.createBufferSource(); src.buffer = buf;
+  const bp = c.createBiquadFilter(); bp.type = 'bandpass';
+  bp.frequency.value = 1700 + Math.random()*600; bp.Q.value = 1.3;
+  const g = c.createGain();
+  // 0.2 是实测出来的：带通只留下窄带能量，画面-like 的 0.05 实际峰值只有 -32dBFS，喇叭上几乎听不见
+  g.gain.setValueAtTime(0.2 * (v||1), t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+  src.connect(bp); bp.connect(g); g.connect(c.destination);
+  src.start(t); src.stop(t + len + 0.02);
+}
+/* 落定的「叮」：两个正弦叠五度，半秒衰减 */
+function sfxLand(){
+  if(!sfxOn()) return;
+  const c = sfxCtx(); if(!c) return;
+  const t = c.currentTime;
+  [[1568, 0, 0.11, 0.6], [2349, 0.055, 0.055, 0.45]].forEach(([f, delay, peak, dur])=>{
+    const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+    const g = c.createGain(); const s = t + delay;
+    g.gain.setValueAtTime(0.0001, s);
+    g.gain.exponentialRampToValueAtTime(peak, s + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, s + dur);
+    o.connect(g); g.connect(c.destination);
+    o.start(s); o.stop(s + dur + 0.05);
+  });
+}
+
 /* ================= 抽题 ================= */
 function buildCatChips(){
   const box = $('catChips'); box.innerHTML = '';
@@ -893,18 +972,19 @@ function topicPool(){
   return (S.bank[S.cat]||[]).map(t=>({t, c:S.cat}));
 }
 let scrambleTimer = null;
+const SCRAMBLE_STEPS = 12;      // 滚动帧数；帧间隔逐帧拉长，越接近落定越慢
 function draw(){
   const pool = topicPool();
   if(!pool.length){ toast('该分类下没有命题'); return; }
   const hero = $('topicHero');
-  clearInterval(scrambleTimer);
+  clearTimeout(scrambleTimer);
   hero.classList.add('scrambling'); hero.classList.remove('settled');
   $('toPrepBtn').classList.remove('show');
   let n = 0;
-  scrambleTimer = setInterval(()=>{
+  const step = ()=>{
     $('topicText').textContent = pool[Math.floor(Math.random()*pool.length)].t;
-    if(++n > 9){
-      clearInterval(scrambleTimer);
+    n++;
+    if(n > SCRAMBLE_STEPS){
       const pick = pool[Math.floor(Math.random()*pool.length)];
       S.topic = pick.t; S.topicCat = pick.c;
       const tt = $('topicText'); tt.textContent = pick.t; tt.className = 'topic-text settle';
@@ -912,8 +992,13 @@ function draw(){
       hero.classList.remove('scrambling'); hero.classList.add('settled');
       $('toPrepBtn').classList.add('show');
       resetNotes(S.otTpl || 'three');   // 换题就换笔记，保留上次选的骨架
+      sfxLand();
+      return;
     }
-  }, 70);
+    sfxTick(0.55 + 0.5 * n / SCRAMBLE_STEPS);   // 越接近结果越响
+    scrambleTimer = setTimeout(step, 60 + Math.round(140 * Math.pow(n/SCRAMBLE_STEPS, 2.2)));
+  };
+  scrambleTimer = setTimeout(step, 60);
 }
 
 /* ================= 备稿 ================= */
@@ -985,6 +1070,9 @@ function enterPrep(){
   cancelAutoStart();
   if(!S.outline || !S.outline.length) resetNotes('three');
   renderPrep(); setPhase('prep');
+  // 备稿有 5~10 分钟，正好把 9 秒级的模型加载藏在这里做完，开讲时就不用等了
+  if(S.cfg.speech.engine === 'sherpa' || S.cfg.speech.engine === 'whisper')
+    api.post('/api/speech/warmup', {}).then(()=>{ S.warmed = true; }).catch(()=>{});
 }
 
 /* ================= 备稿提纲 ================= */
@@ -1198,12 +1286,19 @@ function partialHtml(text){
     : escWithMarks(text);
   return '<span class="partial">' + html + '</span>';
 }
+/* 有新字出来 = 正在讲：刷新"最后一次出字"的时间戳，还开着的那次卡壳就此闭合 */
+function noteSpeech(){
+  const now = Date.now();
+  S.lastTextAt = now;
+  if(S.stuckOpen) closeStuck();
+}
 function pushFinal(text){
   if(!text) return;
   S.transcript += text;
   S.partial = ''; S._lastPartial = '';
   renderSubtitle();
   enqueueSentences(text);
+  noteSpeech();
   updateLiveStats();
 }
 function pushPartial(text, ver){
@@ -1213,6 +1308,7 @@ function pushPartial(text, ver){
   S.partial = text;
   renderSubtitle();
   S._lastPartial = text;
+  noteSpeech();
 }
 /* 实时统计（本地轻量统计，无需往返后端） */
 function updateLiveStats(){
@@ -1222,8 +1318,25 @@ function updateLiveStats(){
   const marks = matchMarks(t);
   const cnt = {filler:0, hedging:0, vague:0};
   marks.forEach(m=>cnt[m.cat]++);
+  // 当前分：基础分 − 看稿/提示的扣分，边讲边变（填充词扣分要等结算才算）
+  const T = TRAIN();
+  const score = Math.max(0, T.base_score - S.peek*T.peek_penalty - S.hint*(T.hint_penalty ?? 5));
+  const row = $('lsScoreRow');
+  if(row){
+    $('lsScore').textContent = score;
+    row.classList.toggle('warn', score < T.base_score && score >= T.base_score*0.7);
+    row.classList.toggle('bad', score < T.base_score*0.7);
+  }
   $('lsDur').textContent = fmt(dur);
   $('lsChars').textContent = chars;
+  // 语速：不足 10 秒的样本没意义，先显示占位
+  $('lsWpm').textContent = dur >= 10 ? Math.round(chars / (dur/60)) : '—';
+  // 卡壳：还没闭合的那次也算进次数与总时长，否则显示会慢一拍
+  const st = S.stuck + (S.stuckOpen ? 1 : 0);
+  const ms = S.stuckMs + (S.stuckOpen ? Date.now() - S.stuckFrom : 0);
+  $('lsStuck').textContent = st;
+  $('lsStuckAvg').textContent = st ? fmt(Math.round(ms/1000/st)) : '0:00';
+  $('lsStuckTot').textContent = fmt(Math.round(ms/1000));
   $('lsFiller').textContent = cnt.filler;
   $('lsHedge').textContent = cnt.hedging;
   $('lsVague').textContent = cnt.vague;
@@ -1238,12 +1351,15 @@ function updateLiveStats(){
     ? '高频：' + habits.map(([w,c])=>`${w}·${c}`).join('  ') : '';
 }
 
-/* ---------------- 实时逐句点评 ---------------- */
-/* 转写流里按句末标点切句，攒够一句就送 AI 点评（串行，不并发） */
+/* ---------------- 表达提示：本地即时信号 + AI 段落建议 ---------------- */
+/* 说话过程中不能给长文点评（没人会去看），只给一句话的方向提醒，挂在字稿正下方。
+   两种来源：本地信号（0 延迟、0 token：语速/口头禅密集）与 AI 段落建议（跑题/缺例子/方向）。 */
 let coachQueue = [], coachBusy = false, coachOn = true, coachSeen = new Set(), coachCount = 0;
+let hintLock = 0, lastHintText = '';
+const signalCd = {};        // 单个本地信号的冷却时间戳，避免一直重复同一条
 function coachCfg(){
   const c = S.cfg?.coach || {};
-  return {every: Math.max(1, +c.every || 1), minChars: Math.max(2, +c.min_chars || 8)};
+  return {every: Math.max(1, +c.every || 3), minChars: Math.max(2, +c.min_chars || 8)};
 }
 function enqueueSentences(chunk){
   // 用累积的尾部逐字扫描句末标点
@@ -1270,43 +1386,116 @@ function enqueueSentences(chunk){
 }
 async function pumpCoach(){
   if(coachBusy || !coachOn || !coachQueue.length) return;
-  const hasAI = S.cfg.ai.base_url && S.cfg.ai.model;
-  if(!hasAI) return;
+  if(!(S.cfg.ai.base_url && S.cfg.ai.model)) return;
   coachBusy = true;
-  const sent = coachQueue.shift();
-  const idx = S.coach.length;
-  S.coach.push({sentence: sent, pending: true});
-  renderCoach();
+  coachQueue.shift();                       // 段落本身的文本已含在下发的 recent 里
   try{
-    const r = await api.post('/api/analyze/incremental', {
-      topic: S.topic, sentence: sent,
-      context: S.coach.map(c=>c.sentence).join('')
+    const r = await api.post('/api/analyze/hint', {
+      topic: S.topic,
+      recent: S.transcript.slice(-220),
+      hints: (S.hintsGiven||[]).slice(-4),
     });
-    S.coach[idx] = {sentence: sent, ...r};
-  }catch(e){
-    S.coach[idx] = {sentence: sent, issues: [], suggestion: '', severity: 'info', error: e.message};
-  }
-  renderCoach();
+    if(r.hint){ S.hintsGiven.push(r.hint); showHint(r.hint, r.kind || '提示'); }
+  }catch(e){ /* AI 不可用就静默跳过，本地信号照常工作 */ }
   coachBusy = false;
-  if(coachQueue.length) setTimeout(pumpCoach, 1200);  // 节流：句间留出间隔
+  if(coachQueue.length) setTimeout(pumpCoach, 1500);   // 节流：两次 AI 呼叫之间留出间隔
 }
-function renderCoach(){
-  const list = $('coachList');
-  list.innerHTML = '';
-  S.coach.slice(-6).reverse().forEach(c=>{
-    const div = document.createElement('div');
-    div.className = 'coach-item sev-' + (c.severity||'info') + (c.pending ? ' pending' : '');
-    const notes = (c.issues||[]).map(i=>`<div class="ci-n">· ${esc(i.note)}</div>`).join('');
-    div.innerHTML = c.pending
-      ? `<div class="ci-q">“${esc(c.sentence)}”</div><div class="ci-n"><span class="spin"></span>点评中…</div>`
-      : `<div class="ci-q">“${esc(c.sentence)}”</div>${notes}${c.suggestion?`<div class="ci-s">→ ${esc(c.suggestion)}</div>`:''}${!notes&&!c.suggestion?'<div class="ci-n">这句没问题</div>':''}`;
-    list.appendChild(div);
-  });
-  if(!list.children.length){
-    list.innerHTML = '<div class="ci-q" style="color:var(--faint)">说完一句后会即时点评</div>';
+/* 本地即时信号：语速过快 / 口头禅密集。纯前端算，不经过 AI */
+function checkLocalSignals(){
+  if(!S.speaking || S.paused || S.readying) return;
+  if(Date.now() < hintLock) return;         // 当前这条还没展示够，别顶掉
+  // 1) 语速：对最近 30 秒做滑动窗口，样本不足 15 秒不判断
+  S._rate = S._rate || [];
+  S._rate.push([Date.now(), S.transcript.length]);
+  while(S._rate.length > 2 && Date.now() - S._rate[0][0] > 30000) S._rate.shift();
+  const a = S._rate[0], b = S._rate[S._rate.length - 1];
+  const dt = (b[0] - a[0]) / 1000, dc = b[1] - a[1];
+  if(dt >= 15){
+    const cpm = Math.round(dc / (dt / 60));
+    const fast = +(TRAIN().wpm_fast ?? 330) || 330;
+    const slow = +(TRAIN().wpm_slow ?? 0) || 0;
+    if(cpm >= fast && Date.now() > (signalCd.wpm || 0)){
+      signalCd.wpm = Date.now() + 60000;    // 同一信号 60 秒内不再提
+      showHint(`语速 ${cpm} 字/分，试着放慢一点`, '语速', 'loc');
+      return;
+    }
+    if(slow > 0 && cpm <= slow && Date.now() > (signalCd.wpmSlow || 0)){
+      signalCd.wpmSlow = Date.now() + 60000;
+      showHint(`语速 ${cpm} 字/分，偏慢了，把节奏提起来`, '语速', 'loc');
+      return;
+    }
+  }
+  // 2) 口头禅密集：最近 200 字里同一个词出现 N 次以上（N 可在设置里改）
+  const recent = S.transcript.slice(-200);
+  const dict = Object.values(S.words || {}).flat();
+  const burst = Math.max(2, +(TRAIN().filler_burst ?? 3) || 3);
+  for(const w of dict){
+    if(!w) continue;
+    const n = recent.split(w).length - 1;
+    if(n >= burst && Date.now() > (signalCd[w] || 0)){
+      signalCd[w] = Date.now() + 120000;
+      showHint(`刚才连着说了 ${n} 次「${w}」`, '口头禅', 'loc');
+      return;
+    }
   }
 }
-
+/* 一次只显示一条：新的顶掉旧的，但至少要停留 6 秒。
+   tone 决定颜色：loc=本地即时信号（红，语速/口头禅）
+                 ai=AI 段落建议（琥珀，跑题/缺例子/结构）
+                 dir=点「提示」换来的具体内容建议（蓝，停留更久、可手动点掉） */
+function showHint(text, kind, tone, force){
+  if(!text) return;
+  const box = $('speakHint');
+  if(!box) return;
+  const now = Date.now();
+  if(!force && now < hintLock && text !== lastHintText) return;
+  $('hintKind').textContent = kind || '提示';
+  $('hintText').textContent = text;
+  box.classList.remove('loc', 'dir');
+  if(tone === 'loc' || tone === 'dir') box.classList.add(tone);
+  box.hidden = false;
+  box.style.animation = 'none'; void box.offsetWidth; box.style.animation = '';
+  lastHintText = text; hintLock = now + 6000;
+  clearTimeout(S.hintTimer); S.hintTimer = null;
+  // 停留时长：方向提示用完整的 hint_sec（长一点，够读完）；段落建议/本地信号短一些，别占着位置
+  const sec = +(S.cfg?.coach?.hint_sec ?? 24) || 0;
+  const hold = tone === 'dir' ? sec : (sec === 0 ? 10 : Math.min(sec, 10));
+  if(hold > 0) S.hintTimer = setTimeout(()=>{ box.hidden = true; }, hold * 1000);
+}
+function clearHint(){
+  clearTimeout(S.hintTimer); S.hintTimer = null;
+  const box = $('speakHint'); if(box) box.hidden = true;
+  lastHintText = ''; hintLock = 0;
+}
+// 手动点掉：看完就收，不用干等自动消失
+$('speakHint').addEventListener('click', ()=>{ clearHint(); });
+/* 「提示」按钮：扣分换一条具体内容建议——卡壳时的主动求助。
+   要点：把备稿笔记一并给 AI，它才知道"你本来打算讲什么、还剩什么没讲" */
+async function tapHint(){
+  S.hint++; $('hintCount').textContent = '×' + S.hint;
+  const b = $('hintBtn'); b.classList.remove('pressed'); void b.offsetWidth; b.classList.add('pressed');
+  if(!(S.cfg.ai.base_url && S.cfg.ai.model)){
+    showHint('没配 AI，方向提示用不了', '提示', 'loc'); return;
+  }
+  // 想方向的时间不该算进你的表达时长：生成期间暂停，拿到就继续
+  const autoPause = TRAIN().auto_pause !== false;
+  const wasPaused = S.paused;
+  const canPause = autoPause && S.speaking && !S.paused && !S.readying;
+  if(canPause) await pauseSpeak();
+  showHint('想方向中…', '方向', 'dir', true);   // 主动索取：顶掉当前这条，立刻显示
+  try{
+    const r = await api.post('/api/analyze/hint', {
+      topic: S.topic, recent: S.transcript.slice(-220),
+      hints: (S.hintsGiven||[]).slice(-4), manual: true, notes: notesText(),
+    });
+    const t = r.hint || '接着刚才的例子再往深说一层';
+    S.hintsGiven.push(t);
+    showHint(t, r.kind || '方向', 'dir', true);         // dir=蓝色，跟段落建议区分
+  }catch(e){
+    showHint('AI 没回，按自己的节奏接着讲', '提示', 'loc');
+  }
+  if(canPause && !wasPaused) resumeSpeak();
+}
 /* 累计「真正在说」的秒数：暂停的间隙不算进时长和语速 */
 function speakSec(){
   return (S.speakElapsed + (S.speakStart ? Date.now()-S.speakStart : 0)) / 1000;
@@ -1340,6 +1529,7 @@ function runReadyCountdown(n){
 /* 暂停 / 继续：录音与计时同时停走，识别先 flush 保证最后半句不丢 */
 async function pauseSpeak(){
   if(!S.speaking || S.paused || S.readying) return;
+  closeStuck();                     // 暂停前先把还开着的那次卡壳结算掉
   S.paused = true;
   S.speakElapsed += Date.now() - S.speakStart;   // 把当前这段结算进累计时长
   S.speakStart = null;
@@ -1352,10 +1542,13 @@ async function resumeSpeak(){
   if(!S.speaking || !S.paused) return;
   S.paused = false;
   S.speakStart = Date.now();
+  S.lastTextAt = Date.now();        // 暂停的那段不算卡壳，从头计
   clearInterval(S.speakTimer);
   S.speakTimer = setInterval(()=>{
     $('speakTime').textContent = fmt(speakSec());
+    tickStuck();
     updateLiveStats();
+    checkLocalSignals();
   }, 500);
   try{ if(S.recorder && S.recorder.state === 'paused') S.recorder.resume(); }catch(e){}
   const engine = S.cfg.speech.engine;
@@ -1379,18 +1572,17 @@ async function startSpeak(){
   stopEngines();                    // 清掉可能残留的旧连接/旧采集器
   clearInterval(S.prepTimer); S.prepTimer = null;
   cancelAutoStart();                // 手动开讲：取消自动开讲倒计时
-  S.forget=0; S.peek=0; S.transcript=''; S.stats=null; S.analysis=null; S.report=null; S.entryId=null;
+  S.peek=0; S.transcript=''; S.stats=null; S.analysis=null; S.report=null; S.entryId=null;
+  S.stuck=0; S.stuckMs=0; S.stuckOpen=false; S.stuckFrom=0; S.lastTextAt=0;
   S.partial=''; S._lastPartial=''; S._finalVer=0;
   S.coach=[]; S._scanned=0; coachQueue=[]; coachBusy=false; coachSeen=new Set(); coachCount=0;
+  S.hint=0; S.hintsGiven=[]; S._rate=[];
   S.paused=false; S.speakElapsed=0; S.speakStart=null; S.readying=false; S._stream=null;
-  $('forgetCount').textContent=''; $('peekCount').textContent='';
+  clearHint();
+  $('peekCount').textContent=''; $('hintCount').textContent='';
   $('speakTopic').textContent = S.topic;
   $('subtitleBox').innerHTML = '<span class="ph">实时转写</span>';
   const engine = S.cfg.speech.engine;
-  // 实时教练：需要 AI 配置 + 有转写引擎
-  const coachReady = engine !== 'none' && S.cfg.ai.base_url && S.cfg.ai.model;
-  $('coachBox').style.display = coachReady ? '' : 'none';
-  if(coachReady) renderCoach();
 
   // 进入开讲先把实时统计清零：否则会残留上一轮的数字，
   // 一直显示到说出第一句话被转写结果覆盖为止
@@ -1403,19 +1595,33 @@ async function startSpeak(){
   const audio = await setupAudio(engine);
   if(!S.speaking) return;            // 期间被结束
 
+  // 引擎必须在倒计时之前起来（会 await 到后端回 ready）：
+  // 首次加载模型 + 首帧预热要花掉一两秒，放在倒计时之后这笔时间就落在第一句话上，
+  // 表现是"第一句要等说完才出字，后面才正常流式"
+  if(audio){
+    const note = $('micNote'), noteText = note.textContent;
+    note.textContent = S.warmed ? '识别准备中…' : '识别模型加载中…'; note.classList.add('show');
+    S.loading = true;                  // 加载期间不送音频：送了也会被后端丢掉
+    try{ await startEngine(audio, engine); }   // 返回 Promise：收到 ready / error 才放行
+    finally{ S.loading = false; }
+    note.textContent = noteText; note.classList.remove('show');
+    if(!S.speaking) return;          // 加载期间点了结束汇报
+  }
+
   const ready = +(TRAIN().ready_countdown ?? 3) || 0;
   if(ready > 0){
     await runReadyCountdown(Math.min(30, ready));
     if(!S.speaking) return;          // 倒计时里点了结束汇报
   }
 
-  if(audio) startEngine(audio, engine);
   S.speakStart = Date.now();
   clearInterval(S.speakTimer);
   // 计时器顺带刷新实时统计：时长/字数不再只等转写结果才动
   S.speakTimer = setInterval(()=>{
     $('speakTime').textContent = fmt(speakSec());
+    tickStuck();                  // 多久没出字算卡壳
     updateLiveStats();
+    checkLocalSignals();          // 语速/口头禅：本地算，跟着计时器走
   }, 500);
   updateSpeakUI();
 }
@@ -1451,19 +1657,26 @@ function startEngine(stream, engine){
     try{
       const proto = location.protocol === 'https:' ? 'wss' : 'ws';
       ws = new WebSocket(`${proto}://${location.host}/ws/speech`);
-      ws.onopen = ()=> ws.send(JSON.stringify({type:'start', engine: engine, model: S.cfg.speech.model}));
-      ws.onmessage = ev=>{
-        try{
-          const m = JSON.parse(ev.data);
-          // final=已说完的一句（入库）；partial=正在说的预览（只显示，会被 final 覆盖）
-          if(m.type==='final' && m.text){ S._finalVer = m.v || 0; pushFinal(m.text); }
-          else if(m.type==='partial' && m.text){ pushPartial(m.text, m.v); }
-          if(m.type==='error'){ toast('转写：'+m.message); }
-        }catch(e){}
-      };
-    }catch(e){ toast('WebSocket 连接失败'); }
+    }catch(e){ toast('WebSocket 连接失败'); return Promise.resolve(); }
+    let settle = null, settled = false;
+    const readyP = new Promise(r=>{ settle = r; });
+    const done = ()=>{ if(settled) return; settled = true; settle(); };
+    ws.onopen = ()=> ws.send(JSON.stringify({type:'start', engine: engine, model: S.cfg.speech.model}));
+    ws.onmessage = ev=>{
+      try{
+        const m = JSON.parse(ev.data);
+        // final=已说完的一句（入库）；partial=正在说的预览（只显示，会被 final 覆盖）
+        if(m.type==='final' && m.text){ S._finalVer = m.v || 0; pushFinal(m.text); }
+        else if(m.type==='partial' && m.text){ pushPartial(m.text, m.v); }
+        if(m.type==='error'){ toast('转写：'+m.message); }
+        if(m.type==='ready' || m.type==='error') done();   // 模型就绪（或加载失败）才放行倒计时
+      }catch(e){}
+    };
+    ws.onerror = done; ws.onclose = done;
+    setTimeout(done, 30000);          // 兜底：加载卡住也别把开讲流程锁死
     proc.onaudioprocess = e=>{
       if(!ws || ws.readyState !== 1) return;
+      if(S.readying || S.loading) return;  // 准备倒计时 / 模型加载期间不送：反正后端还没准备好
       const f = e.inputBuffer.getChannelData(0);
       const buf = new Int16Array(f.length);
       for(let i=0;i<f.length;i++){ const s = Math.max(-1, Math.min(1, f[i])); buf[i] = s<0 ? s*0x8000 : s*0x7FFF; }
@@ -1471,6 +1684,7 @@ function startEngine(stream, engine){
     };
     src.connect(proc); proc.connect(ctx.destination);
     S.ws = ws; S._audioCtx = ctx; S._proc = proc;
+    return readyP;
   }
   else if(engine === 'web-speech'){
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1511,13 +1725,31 @@ async function stopEngines(flush){
 }
 
 /* ================= 减分按钮 ================= */
-function tapForget(){
-  S.forget++; $('forgetCount').textContent = '×'+S.forget;
-  const b = $('forgetBtn'); b.classList.remove('pressed'); void b.offsetWidth; b.classList.add('pressed');
+/* 卡壳统计：多久没出新字算卡一次，累计次数与总时长；讲完时没闭合的那次也要结算 */
+function stuckSec(){ return Math.max(1, +(TRAIN().stuck_sec ?? 3) || 3); }
+function tickStuck(){
+  if(!S.speaking || S.paused || S.readying || !S.speakStart) return;
+  const now = Date.now();
+  // 开场还没出过字给 5 秒宽限：站在那儿想开场白不算卡壳
+  if(!S.lastTextAt && now - S.speakStart < 5000) return;
+  const base = S.lastTextAt || S.speakStart;
+  if(!S.stuckOpen && now - base >= stuckSec()*1000){
+    S.stuckOpen = true; S.stuckFrom = base;
+  }
+}
+function closeStuck(){
+  if(!S.stuckOpen) return;
+  S.stuck++; S.stuckMs += Math.max(0, Date.now() - S.stuckFrom);
+  S.stuckOpen = false;
 }
 function tapPeek(){
   S.peek++; $('peekCount').textContent = '×'+S.peek;
   const b = $('peekBtn'); b.classList.remove('pressed'); void b.offsetWidth; b.classList.add('pressed');
+  clearHint();                       // 看稿时把提示收掉，免得两条信息打架
+  // 自动暂停：看稿期间不算你的表达时间，纸条收掉后自动继续
+  const autoPause = TRAIN().auto_pause !== false;
+  S._peekPaused = autoPause && S.speaking && !S.paused && !S.readying;
+  if(S._peekPaused) pauseSpeak();
   const notes = notesText();
   $('paperNotes').innerHTML = notes ? esc(notes) : '<span class="p-empty">（备稿阶段没有记要点）</span>';
   $('paperPenalty').textContent = `已记为看稿一次 · −${TRAIN().peek_penalty} 分`;
@@ -1531,7 +1763,10 @@ function tapPeek(){
   clearInterval(S.peekTimer);
   S.peekTimer = setInterval(()=>{
     left--; $('paperCountdown').textContent = Math.max(left,0);
-    if(left<=0){ clearInterval(S.peekTimer); $('peekOverlay').classList.remove('show'); }
+    if(left<=0){
+      clearInterval(S.peekTimer); $('peekOverlay').classList.remove('show');
+      if(S._peekPaused){ S._peekPaused = false; resumeSpeak(); }
+    }
   },1000);
 }
 
@@ -1540,6 +1775,7 @@ async function endSpeak(){
   if(!S.speaking) return;           // 防重入：结算只出一次
   S.speaking = false;
   clearInterval(S.speakTimer);
+  clearHint();                      // 讲完了，提示条收起来
   if(S.readying && S._skipReady) S._skipReady();   // 准备倒计时直接收掉
   if(S.paused){ S.paused = false; }                // 暂停中结束：时长用累计值
   await stopEngines(true);        // 收尾：把最后半句定稿后再读文本
@@ -1549,7 +1785,7 @@ async function endSpeak(){
   if(S.recorder && S.recorder.state !== 'inactive') S.recorder.stop();
 
   const T = TRAIN();
-  let score = Math.max(0, T.base_score - S.forget*T.forget_penalty - S.peek*T.peek_penalty);
+  let score = Math.max(0, T.base_score - S.peek*T.peek_penalty - S.hint*(T.hint_penalty ?? 5));
   let fillerNote = '';
   if(S.transcript.trim()){
     S.stats = await api.post('/api/analyze/words', {transcript: S.transcript, duration_sec: dur});
@@ -1569,9 +1805,15 @@ async function endSpeak(){
   sn.className = 'score-num ' + (score>=95?'good':score>=70?'mid':'bad');
   sn.style.animation='none'; void sn.offsetWidth; sn.style.animation='';
   $('scoreRating').textContent = rating;
-  $('scoreRule').textContent = `基础 ${T.base_score} · 忘词 −${T.forget_penalty}/次 · 看稿 −${T.peek_penalty}/次` + (fillerNote?' · '+fillerNote:'');
+  $('scoreRule').textContent = `基础 ${T.base_score} · 看稿 −${T.peek_penalty}/次 · 提示 −${T.hint_penalty ?? 5}/次` + (fillerNote?' · '+fillerNote:'');
   $('statDur').textContent = Math.floor(dur/60)+':'+String(dur%60).padStart(2,'0');
-  $('statForget').textContent = S.forget; $('statPeek').textContent = S.peek;
+  const _chars = S.transcript.replace(/\s/g,'').length;
+  $('statWpm').textContent = dur >= 10 ? Math.round(_chars/(dur/60)) : '—';
+  closeStuck();                       // 讲完时还卡着的那次也算进去
+  $('statPeek').textContent = S.peek; $('statHint').textContent = S.hint;
+  $('statStuck').textContent = S.stuck;
+  $('statStuckAvg').textContent = S.stuck ? fmt(Math.round(S.stuckMs/1000/S.stuck)) : '0:00';
+  $('statStuckTot').textContent = fmt(Math.round(S.stuckMs/1000));
 
   setTimeout(()=>{
     if(S.audioURL){ $('audioPlayer').src = S.audioURL; $('audioWrap').style.display=''; }
@@ -1613,13 +1855,18 @@ async function endSpeak(){
   // 存历史
   try{
     const entry = await api.post('/api/history', {
-      topic: S.topic, cat: S.topicCat, score, forget: S.forget, peek: S.peek, dur,
+      topic: S.topic, cat: S.topicCat, score, forget: 0, peek: S.peek, dur,
+      stuck: S.stuck, stuck_ms: S.stuckMs, hint: S.hint,
       transcript: S.transcript, stats: S.stats ? {categories:S.stats.categories, habits:S.stats.habits} : {},
       analysis: S.analysis || {},
     });
     S.entryId = entry.id;
   }catch(e){ toast('历史保存失败：'+e.message); }
   renderDrawer();
+  // 讲完自动跑一次整体分析（设置里可关）：省掉手动点那一下
+  if(S.cfg.ai?.auto_analyze && hasAI && S.transcript.trim() && !realtime.length){
+    setTimeout(()=>{ try{ $('aiBtn').click(); }catch(e){} }, 400);
+  }
   setPhase('result');
 }
 
@@ -1779,7 +2026,7 @@ $('reportBtn').onclick = async ()=>{
     const rep = await api.post('/api/report', {
       entry_id: S.entryId || String(Date.now()),
       topic: S.topic, score: +$('scoreNum').textContent,
-      forget: S.forget, peek: S.peek,
+      peek: S.peek,
       duration_sec: S.stats ? S.stats.duration_sec : 0,
       stats: S.stats || {}, habits: S.stats?.habits || [],
       analysis: S.analysis || {},
@@ -1867,7 +2114,7 @@ async function renderDrawer(){
       <div class="hl-top"><span class="hl-topic">${esc(h.topic)}</span>
         <span class="hl-score" style="color:${col}">${h.score}</span></div>
       <div class="hl-meta"><span>${mm} · ${h.dur||0}s</span>
-        ${h.forget?`<span class="f">忘 ${h.forget}</span>`:''}
+        ${h.stuck?`<span class="f">卡 ${h.stuck}</span>`:''}
         ${h.peek?`<span class="p">看 ${h.peek}</span>`:''}</div>
       <div class="hl-acts"><button class="hl-act rep">查看报告</button><button class="hl-act del">删除</button></div>`;
     li.querySelector('.rep').onclick = async ()=>{
@@ -1950,23 +2197,34 @@ function fillSettings(){
   $('cBg').value = c.theme.custom.bg; $('cInk').value = c.theme.custom.ink; $('cAccent').value = c.theme.custom.accent;
   $('aiUrl').value = c.ai.base_url; $('aiKey').value = c.ai.api_key;
   $('aiModel').value = c.ai.model; $('aiTimeout').value = c.ai.timeout;
-  $('cEvery').value = String(c.coach?.every ?? 1);
+  $('aiAuto').value = String(c.ai?.auto_analyze === true);
+  $('cEvery').value = String(c.coach?.every ?? 3);
   $('cMin').value = c.coach?.min_chars ?? 8;
+  $('cMax').value = c.coach?.max_chars ?? 40;
+  $('cHold').value = c.coach?.hint_sec ?? 24;
   $('cPrompt').value = c.coach?.prompt ?? '';
   $('speechEngine').value = c.speech.engine;
   $('whisperModels').style.display = (c.speech.engine==='whisper'||c.speech.engine==='sherpa')?'':'none';
   // 断句等待 / 最长分句 / 边说边出字 三个选项已移除，后端用固定值
   loadModelList(); loadPunct();
-  $('tBase').value = c.training.base_score; $('tForget').value = c.training.forget_penalty;
-  $('tPeek').value = c.training.peek_penalty; $('tDurs').value = (c.training.prep_durations||[]).join(',');
+  $('tBase').value = c.training.base_score;
+  $('tPeek').value = c.training.peek_penalty;
+  $('tHint').value = c.training.hint_penalty ?? 5; $('tDurs').value = (c.training.prep_durations||[]).join(',');
   $('tFillerOn').value = String(c.training.filler_scoring); $('tFillerTh').value = c.training.filler_threshold;
   $('tReady').value = c.training.ready_countdown ?? 3;
   $('tAutoStart').value = c.training.auto_start_sec ?? 5;
   $('tPeekDur').value = c.training.peek_duration ?? 3;
+  $('tAutoPause').value = String(c.training.auto_pause !== false);
+  $('tStuckSec').value = c.training.stuck_sec ?? 3;
+  $('tWpmFast').value = c.training.wpm_fast ?? 330;
+  $('tWpmSlow').value = c.training.wpm_slow ?? 0;
+  $('tBurst').value = c.training.filler_burst ?? 3;
   $('dSubtitle').value = c.display?.subtitle_size ?? 30;
   $('dCoach').value = c.display?.coach_size ?? 13.5;
   $('dNewline').value = String(c.display?.sentence_newline !== false);
   $('dPunct').value = String(c.display?.show_punct !== false);
+  $('dSfx').value = String(c.ui?.sfx !== false);
+  $('dKeep').value = c.ui?.history_keep ?? 200;
   $('spSilence').value = ((c.speech.silence_ms ?? 1200)/1000).toFixed(1);
   $('spMax').value = c.speech.max_utter_sec ?? 20;
   $('wFiller').value = (S.words.filler||[]).join('，');
@@ -2174,7 +2432,8 @@ $('fetchModelsBtn').onclick = async ()=>{
 };
 $('aiSaveBtn').onclick = async ()=>{
   S.cfg.ai = {base_url:$('aiUrl').value.trim(), api_key:$('aiKey').value.trim(),
-              model:$('aiModel').value.trim(), timeout:+$('aiTimeout').value||60};
+              model:$('aiModel').value.trim(), timeout:+$('aiTimeout').value||60,
+              auto_analyze:$('aiAuto').value==='true'};
   S.cfg = await api.put('/api/config', S.cfg);
   toast('AI 配置已保存');
 };
@@ -2199,31 +2458,38 @@ $('speechSaveBtn').onclick = async ()=>{
   S.cfg = await api.put('/api/config', S.cfg);
   toast('语音配置已保存');
 };
-/* 训练参数 */
-$('trainSaveBtn').onclick = async ()=>{
+/* 训练参数：分成「计分 / 节奏 / 实时信号」三块，任一处的保存都是整组一起提交 */
+async function saveTraining(){
   const durs = $('tDurs').value.split(/[,，\s]+/).map(Number).filter(n=>n>0);
   if(!durs.length){ toast('备稿时长格式错误'); return; }
   S.cfg.training = {
-    base_score:+$('tBase').value||100, forget_penalty:+$('tForget').value||5,
+    base_score:+$('tBase').value||100,
     peek_penalty:+$('tPeek').value||10, prep_durations:durs,
     filler_scoring:$('tFillerOn').value==='true', filler_threshold:+$('tFillerTh').value||8,
+    hint_penalty:Math.max(0, Math.min(50, +$('tHint').value||0)),
     ready_countdown:Math.max(0, Math.min(30, +$('tReady').value||0)),
     auto_start_sec:Math.max(0, Math.min(60, +$('tAutoStart').value||0)),
     peek_duration:Math.max(1, Math.min(30, +$('tPeekDur').value||3)),
+    auto_pause:$('tAutoPause').value==='true',
+    stuck_sec:Math.max(1, Math.min(30, +$('tStuckSec').value||3)),
+    wpm_fast:Math.max(120, Math.min(600, +$('tWpmFast').value||330)),
+    wpm_slow:Math.max(0, Math.min(400, +$('tWpmSlow').value||0)),
+    filler_burst:Math.max(2, Math.min(10, +$('tBurst').value||3)),
   };
   S.cfg = await api.put('/api/config', S.cfg);
   S.prepTotal = durs[0]*60; S.prepLeft = S.prepTotal;
   buildDurRow(); renderPrep();
-  $('forgetRule').textContent = `− ${S.cfg.training.forget_penalty} / 次`;
   $('peekRule').textContent = `− ${S.cfg.training.peek_penalty} / 次`;
+  $('hintRule').textContent = `− ${S.cfg.training.hint_penalty} / 次`;
   toast('训练参数已保存');
-};
+}
+document.querySelectorAll('.train-save').forEach(b=> b.onclick = saveTraining);
 /* 显示：开讲页文字大小（写成 CSS 变量，改完立即生效） */
 function applyDisplay(){
   const d = S.cfg.display || {};
   const root = document.documentElement.style;
   root.setProperty('--subtitle-size', (d.subtitle_size || 30) + 'px');
-  root.setProperty('--coach-size', (d.coach_size || 13.5) + 'px');
+  root.setProperty('--hint-size', (d.coach_size || 15) + 'px');   // 开讲提示条的字号
 }
 $('displaySaveBtn').onclick = async ()=>{
   S.cfg.display = {
@@ -2232,21 +2498,26 @@ $('displaySaveBtn').onclick = async ()=>{
     sentence_newline: $('dNewline').value === 'true',
     show_punct: $('dPunct').value === 'true',
   };
+  S.cfg.ui = {...(S.cfg.ui||{}), sfx: $('dSfx').value === 'true',
+    history_keep: Math.max(20, Math.min(2000, +$('dKeep').value||200))};
   S.cfg = await api.put('/api/config', S.cfg);
   applyDisplay();
   if(S.transcript || S.partial) renderSubtitle();   // 换行/标点选项立即作用于当前字稿
   if(S.stats) renderTranscript();                   // 结算页同理
   toast('显示设置已保存');
+  if(S.cfg.ui.sfx){ sfxTick(0.8); setTimeout(sfxLand, 240); }   // 打开时试听一遍
 };
-/* 实时教练：提示词 + 点评频率 */
+/* 表达提示：提示词 + 触发频率 */
 $('coachSaveBtn').onclick = async ()=>{
-  S.cfg.coach = {
+  S.cfg.coach = {...(S.cfg.coach||{}),
     prompt: $('cPrompt').value.trim(),
-    every: Math.min(20, Math.max(1, +$('cEvery').value||1)),
+    every: Math.min(20, Math.max(1, +$('cEvery').value||3)),
     min_chars: Math.min(50, Math.max(2, +$('cMin').value||8)),
+    max_chars: Math.min(120, Math.max(12, +$('cMax').value||40)),
+    hint_sec: Math.min(120, Math.max(0, +$('cHold').value||0)),
   };
   S.cfg = await api.put('/api/config', S.cfg);
-  toast('实时教练设置已保存');
+  toast('表达提示已保存');
 };
 $('coachResetBtn').onclick = async ()=>{
   $('cPrompt').value = '';
@@ -2309,15 +2580,8 @@ $('toPrepBtn').onclick = enterPrep;
 $('startPrepBtn').onclick = startPrep;
 $('startSpeakBtn').onclick = startSpeak;
 $('backDrawBtn').onclick = ()=>{ clearInterval(S.prepTimer); S.prepTimer=null; cancelAutoStart(); setPhase('draw'); };
-$('coachToggle').onclick = ()=>{
-  coachOn = !coachOn;
-  const el = $('coachToggle');
-  el.textContent = coachOn ? '点评 开' : '点评 关';
-  el.classList.toggle('off', !coachOn);
-  if(coachOn) pumpCoach();
-};
-$('forgetBtn').onclick = tapForget;
 $('peekBtn').onclick = tapPeek;
+$('hintBtn').onclick = tapHint;
 $('pauseSpeakBtn').onclick = ()=>{ S.paused ? resumeSpeak() : pauseSpeak(); };
 $('endSpeakBtn').onclick = endSpeak;
 $('againBtn').onclick = ()=>{ setPhase('draw'); draw(); };
@@ -2352,8 +2616,8 @@ document.addEventListener('keydown', e=>{
   }
   S.prepTotal = (TRAIN().prep_durations||[5,10,20,30])[0]*60;
   S.prepLeft = S.prepTotal;
-  $('forgetRule').textContent = `− ${TRAIN().forget_penalty} / 次`;
   $('peekRule').textContent = `− ${TRAIN().peek_penalty} / 次`;
+  $('hintRule').textContent = `− ${TRAIN().hint_penalty ?? 5} / 次`;
   await applyTheme();
   applyDisplay();
   await migrateLocal();

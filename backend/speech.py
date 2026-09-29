@@ -296,6 +296,24 @@ class StreamingSession:
             self.text = text
         return text, ended
 
+    def warmup(self, ms: int = 600):
+        """开讲前先用静音跑一遍流式解码。
+
+        zipformer 这类大模型的第一帧 decode_stream 要付一笔一次性开销（ONNX Runtime
+        的 kernel 初始化与显存/内存分配），不预热这笔钱就算在「第一句」头上——
+        表现是第一句要等整句说完才出字，第二句开始才正常流式。
+        预热会留下状态，跑完必须重置。
+        """
+        try:
+            self.feed(b"\x00" * (int(self.sr * ms / 1000) * 2))
+        except Exception:
+            pass
+        try:
+            self.rec.reset(self.stream)
+        except Exception:
+            self.stream = self.rec.create_stream()
+        self.text = ""
+
     def flush(self) -> str:
         """收尾：把还没到端点但已经识别出的内容吐出来"""
         text = _online_text(self.rec.get_result(self.stream))

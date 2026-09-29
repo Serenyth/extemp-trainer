@@ -2,6 +2,7 @@
 import asyncio
 import json
 import os
+import time
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Query, WebSocket, WebSocketDisconnect
 from fastapi.responses import PlainTextResponse
@@ -124,6 +125,37 @@ def delete_model(model_id: str = Query(...)):
         return {"ok": False, "error": speech.err_log(e)}
 
 
+@app.post("/api/speech/warmup")
+async def speech_warmup():
+    """预加载转写模型（幂等，第二次是秒回）。
+
+    实测 streaming-zipformer-zh-xl 首次 load_sherpa 要 9.3 秒；如果这笔开销留到开讲之后
+    才发生，第一句话的音频会全部落在加载窗口里被丢掉 —— 用户的感觉就是
+    "第一句要等说完才出字，后面才正常流式"。
+    备稿阶段有 5~10 分钟，把它藏在那时做，开讲时模型已经在缓存里。
+    """
+    sp = config.load()["speech"]
+    engine, model_id = sp.get("engine", "none"), sp.get("model", "")
+    if engine not in ("sherpa", "whisper"):
+        return {"ok": False, "skipped": True}
+    if not model_id or not speech.is_model_downloaded(model_id):
+        return {"ok": False, "skipped": True}
+    loop = asyncio.get_running_loop()
+    try:
+        t0 = time.time()
+        if engine == "whisper":
+            await loop.run_in_executor(None, speech.load_whisper, model_id)
+        else:
+            rec = await loop.run_in_executor(
+                None, speech.load_sherpa, model_id,
+                int(sp.get("silence_ms", 700)), float(sp.get("max_utter_sec", 20)))
+            if speech.is_streaming_model(model_id):
+                await loop.run_in_executor(None, speech.StreamingSession(rec).warmup)
+        return {"ok": True, "ms": int((time.time() - t0) * 1000)}
+    except Exception as e:
+        return {"ok": False, "error": speech.err_log(e)}
+
+
 @app.get("/api/speech/punct")
 def punct_status():
     """标点恢复模型的状态；enabled 从配置里读"""
@@ -204,6 +236,30 @@ async def analyze_incremental(req: IncrementalReq):
         raise HTTPException(502, f"AI 调用失败：{speech.err_log(e)}")
 
 
+class HintReq(BaseModel):
+    topic: str = ""
+    recent: str = ""
+    hints: list = []
+    manual: bool = False
+    notes: str = ""
+
+
+@app.post("/api/analyze/hint")
+async def analyze_hint(req: HintReq):
+    """开讲过程中的表达提示。
+
+    自动触发：一句 ≤15 字的当场提醒（跑题/缺例子/结构/方向）。
+    manual=True（点了「提示」）：结合备稿要点与命题，给 ≤coach.max_chars 字的具体内容建议。
+    """
+    try:
+        return await asyncio.get_running_loop().run_in_executor(
+            None, analyzer.analyze_hint, req.topic, req.recent, req.hints, req.manual, req.notes)
+    except RuntimeError as e:
+        raise HTTPException(400, str(e))
+    except Exception as e:
+        raise HTTPException(502, f"AI 调用失败：{speech.err_log(e)}")
+
+
 class SentenceReq(BaseModel):
     topic: str
     transcript: str
@@ -274,7 +330,8 @@ class HistoryEntry(BaseModel):
 
 @app.post("/api/history")
 def add_history(entry: HistoryEntry):
-    return history.add(entry.model_dump())
+    keep = config.load().get("ui", {}).get("history_keep", 200)
+    return history.add(entry.model_dump(), keep)
 
 
 @app.get("/api/history")
@@ -407,6 +464,10 @@ async def ws_speech(ws: WebSocket):
                                         None, loader, model_id, silence_ms, max_utter_sec)
                                     if speech.is_streaming_model(model_id):
                                         session = speech.StreamingSession(model)
+                                        # 预热首帧推理：跟模型加载一样必须赶在用户开口之前，
+                                        # 否则第一句要整句说完才出字
+                                        await asyncio.get_running_loop().run_in_executor(
+                                            None, session.warmup)
                                 else:
                                     model = await asyncio.get_running_loop().run_in_executor(
                                         None, loader, model_id)
