@@ -37,7 +37,7 @@ def resolve_theme():
     t = cfg["theme"]
     if t["preset"] == "custom":
         c = t["custom"]
-        return {**c, "muted": "#8A8F98", "faint": "#5A5E66", "line": "rgba(128,128,128,.18)",
+        return {**c, "muted": "#A6ABB5", "faint": "#7A7F8A", "line": "rgba(128,128,128,.18)",
                 "amber": "#D9A13B", "green": "#6FBF9A", "surface": c["bg"], "dark": True}
     return config.PRESETS[t["preset"]]
 
@@ -281,7 +281,6 @@ class ReportReq(BaseModel):
     entry_id: str
     topic: str
     score: int
-    forget: int
     peek: int
     duration_sec: int
     stats: dict
@@ -295,9 +294,9 @@ async def gen_report(req: ReportReq):
     try:
         md = await asyncio.get_running_loop().run_in_executor(
             None, lambda: analyzer.generate_report(
-                req.topic, req.score, req.forget, req.peek, req.duration_sec,
+                req.topic, req.score, req.peek, req.duration_sec,
                 req.stats, req.habits, req.analysis,
-                cfg["forget_penalty"], cfg["peek_penalty"]))
+                cfg["peek_penalty"]))
         history.save_report(req.entry_id, md)
         return {"id": req.entry_id, "markdown": md}
     except RuntimeError as e:

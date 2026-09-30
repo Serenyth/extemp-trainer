@@ -84,7 +84,9 @@ const check = (cond, label) => (cond ? ok : fail).push(label);
   const secs = [...win.document.querySelectorAll('#settingsDrawer .set-sec[data-cat="训练"]')];
   check(secs.length === 5, `训练分类下 5 块（计分/节奏/实时信号/词表/题库），实际 ${secs.length}`);
   const saves = [...win.document.querySelectorAll('.train-save')];
-  check(saves.length === 3, `三个子类各一个保存按钮，实际 ${saves.length}`);
+  check(saves.length === 1, `整组只留一个保存按钮，实际 ${saves.length}`);
+  const subDiv = [...win.document.querySelectorAll('#settingsDrawer .set-sec.sub')];
+  check(subDiv.length === 2, `前两块不画分割线（.sub），实际 ${subDiv.length}`);
 
   // 5) 开讲页实时统计：分数 / 语速 / 卡壳
   win.eval("S.speaking=true; S.speakStart=Date.now(); S.speakElapsed=0; S.transcript='今天我想讲的是那个那个问题，就是那个。'; S.peek=1; S.hint=1;");
@@ -155,6 +157,114 @@ const check = (cond, label) => (cond ? ok : fail).push(label);
   check($('speakHint').classList.contains('dir'), '方向提示用 dir 色');
   check(/没讲/.test($('hintText').textContent), `提示内容来自 AI，实际「${$('hintText').textContent}」`);
   win.eval('clearInterval(S.speakTimer); S.speakTimer=null; S.speaking=false;');
+
+
+  // 8.5) 开讲页：时长从实时统计里去掉，当前分挪到计时器那一行
+  check(!$('lsDur'), '实时统计不再重复显示时长');
+  const ctrl = win.document.querySelector('.ctrl-top');
+  check(ctrl && ctrl.children[0].id === 'lsScoreRow' && ctrl.children[1].classList.contains('rec-row'),
+        '当前分排在 rec-row 之前');
+  const cs = win.getComputedStyle(win.document.querySelector('.ls-sub'));
+  check(cs.fontSize === '14px', `ls-sub 保持 14px（用户指定），实际 ${cs.fontSize}`);
+  // 全站字号底线：不能再出现 12px 及以下（.set-cat-tag 9px 是唯一豁免）
+  const small = [...win.document.querySelectorAll('.stage, .drawer')]
+    .flatMap(e => [...e.querySelectorAll('*')])
+    .filter(e => { const f = win.getComputedStyle(e).fontSize; return f && parseFloat(f) < 13; })
+    .filter(e => !e.classList.contains('set-cat-tag'));
+  check(small.length === 0, `页面无 12px 以下文字（除角标），实际 ${small.length} 个`);
+  const h3 = win.getComputedStyle(win.document.querySelector('.side-card h3'));
+  check(h3.fontSize === '14px', `区块标题 14px，实际 ${h3.fontSize}`);
+  check(h3.color !== win.getComputedStyle(win.document.body).getPropertyValue('--faint').trim(),
+        '区块标题不再用最淡的灰');
+  const sum = win.getComputedStyle($('aiSummary'));
+  check(sum.fontSize === '15px', `AI 结论 15px，实际 ${sum.fontSize}`);
+  check(String(cs.fontWeight) === '600' || String(cs.fontWeight) === 'bold',
+        `ls-sub 加粗，实际 ${cs.fontWeight}`);
+
+  // 8.55) 按钮体系：次要描边、主操作实底，不能是纯文字
+  // jsdom 算不出 var()（border/background 用了 CSS 变量），所以描边与实底直接查规则源码
+  const ruleText = sel => {
+    for (const sheet of win.document.styleSheets)
+      for (const r of sheet.cssRules)
+        if (r.selectorText && r.selectorText.split(',').map(x => x.trim()).includes(sel))
+          return r.style.cssText;
+    return '';
+  };
+  check(ruleText('.text-btn').includes('1px solid'),
+        `次要按钮有 1px 描边，实际「${ruleText('.text-btn').slice(0, 90)}」`);
+  const tb = win.getComputedStyle(win.document.querySelector('.text-btn'));
+  check(tb.borderRadius === '999px' || parseFloat(tb.borderRadius) > 8,
+        `按钮圆角胶囊，实际 ${tb.borderRadius}`);
+  check(tb.cursor === 'pointer', `按钮有手型光标，实际 ${tb.cursor}`);
+  check(ruleText('.text-btn.accent').includes('var(--ink)'),
+        `主操作是实底，实际「${ruleText('.text-btn.accent').slice(0, 90)}」`);
+  const sv = win.getComputedStyle(win.document.querySelector('.save-btn'));
+  check(sv.cursor === 'pointer' && sv.borderRadius === '999px', '保存按钮是胶囊');
+
+  // 8.6) 实时 AI 提示开关
+  win.eval("clearHint(); coachQueue=['测试一句']; coachBusy=false; coachOn=true;");
+  win.eval("S.cfg.ai.base_url='http://x/v1'; S.cfg.ai.model='m'; S.cfg.coach.enabled=false;");
+  await win.eval('pumpCoach()');
+  check(win.eval('coachQueue.length') === 1, '开关关闭时 AI 提示不跑（队列没被消费）');
+  check($('speakHint').hidden, '开关关闭时没有提示弹出');
+  win.eval("S.cfg.coach.enabled=true;");
+  await win.eval('pumpCoach()');
+  await new Promise(r => setTimeout(r, 60));
+  check(win.eval('coachQueue.length') === 0, '开关打开后 AI 提示正常跑');
+  check($('cOn').value === 'true', '设置回填：开关值跟随配置');
+  win.eval('clearHint()');
+
+  // 8.65) api.req 错误格式化：FastAPI 422 的 detail 是数组
+  const errMsg = await win.eval(`(async () => {
+    const old = window.fetch;
+    window.fetch = () => Promise.resolve({ ok: false, status: 422, statusText: 'Unprocessable',
+      json: async () => ({ detail: [{ loc: ['body', 'forget'], msg: 'Field required', type: 'missing' }] }) });
+    try { await api.get('/api/x'); return 'NO_THROW'; }
+    catch (e) { return e.message; }
+    finally { window.fetch = old; }
+  })()`);
+  check(!/object Object/.test(errMsg), `422 错误不再是 [object Object]，实际「${errMsg}」`);
+  check(/forget/.test(errMsg) && /Field required/.test(errMsg), `错误信息含字段与原因：「${errMsg}」`);
+
+  // 8.7) 结算页：内联点评
+  win.eval("S.transcript='我今天想讲一个观点。这个观点其实很重要。'; S.stats=null;");
+  win.eval("S.analysis={sentences:[{quote:'这个观点其实很重要', issues:[{note:'结论来得太晚'}], suggestion:'把结论提到第一句', severity:'warn'}], summary:'整体不错'};");
+  win.eval('renderTranscript()');
+  const sents = [...win.document.querySelectorAll('#transcriptText .sent')];
+  check(sents.length === 2, `字稿切成两句，实际 ${sents.length}`);
+  check(sents[1].classList.contains('noted') && !sents[0].classList.contains('noted'),
+        '只有被点评的那一句带 .noted');
+  check(sents[1].classList.contains('sev-warn'), '严重程度继承到句子上');
+  check(/结论来得太晚/.test(sents[1].textContent) && /把结论提到第一句/.test(sents[1].textContent),
+        '点评内容内联进了字稿');
+  win.eval("$('transcriptText').classList.add('show-notes'); syncNoteToggle()");
+  check($('noteToggle').textContent === '隐藏点评', '展开时按钮是「隐藏点评」');
+  win.eval("$('transcriptText').classList.remove('show-notes'); syncNoteToggle()");
+  check($('noteToggle').textContent === '显示点评', '收起时按钮是「显示点评」');
+  win.eval('S.analysis=null; syncNoteToggle()');
+  check($('noteToggle').disabled, '没有复盘结果时点评开关禁用');
+
+  // 8.8) 结算页：对比上一场
+  win.eval("S.prevEntry={score:80, dur:60, stuck:2, stats:{categories:{filler:{count:6},hedging:{count:2},vague:{count:1}}, habits:[{word:'那个',count:4}], chars_per_minute:200}};");
+  win.eval("S.stats={categories:{filler:{count:3},hedging:{count:1},vague:{count:0}}, habits:[{word:'就是',count:2}], chars_per_minute:240};");
+  win.eval("S.stuck=1; S.speakElapsed=60000; S.speakStart=null; $('scoreNum').textContent='88';");
+  win.eval('renderCompare()');
+  const rows = [...win.document.querySelectorAll('#cmpBox .cmp-row')];
+  check(rows.length === 5, `对比 5 项，实际 ${rows.length}`);
+  check(rows[0].innerHTML.includes('cd good'), '分数 80→88 记为变好');
+  check(rows[1].innerHTML.includes('cd flat'), '语速是中性项，不着色');
+  check(rows[2].innerHTML.includes('cd good'), '卡壳 2→1 次记为变好');
+  check(rows[4].innerHTML.includes('cd good'), '词汇密度 9→4 记为变好');
+  win.eval('S.prevEntry=null; renderCompare()');
+  check(/第一场/.test($('cmpBox').textContent), '没有上一场时给占位文案');
+
+  // 8.9) 结算页：历史趋势
+  win.eval("HIST=[{score:70,date:'2026-09-20T10:00:00'},{score:80,date:'2026-09-21T10:00:00'},{score:90,date:'2026-09-22T10:00:00'}];");
+  win.eval('renderResultTrend()');
+  const bars = [...win.document.querySelectorAll('#resultTrend i')];
+  check(bars.length === 3, `趋势画 3 根柱，实际 ${bars.length}`);
+  check(win.document.querySelectorAll('#resultTrend i.cur').length === 1, '最新一场高亮');
+  check(/均分/.test($('resultTrendNote').textContent), `趋势有文字总结，实际「${$('resultTrendNote').textContent}」`);
 
   // 9) 忘词已彻底移除
   check(!$('forgetBtn') && !$('tForget') && !$('statForget'), '忘词相关元素已移除');

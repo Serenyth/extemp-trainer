@@ -119,8 +119,8 @@ HINT_FALLBACK = [
 REPORT_PROMPT = """你是演讲教练，基于以下训练数据为用户写一份脱稿训练报告。直接输出 Markdown 正文（不要代码块包裹），语气直接、具体、不空夸。
 
 命题：{topic}
-成绩：{score} 分（基础100，忘词每次-{fp}，看稿每次-{pp}）
-忘词 {forget} 次，看稿 {peek} 次，时长 {dur} 秒
+成绩：{score} 分（基础100，看稿每次-{pp}）
+看稿 {peek} 次，时长 {dur} 秒
 词汇统计：{stats_json}
 口头禅：{habits_json}
 逐句分析摘要：{analysis_json}
@@ -251,9 +251,9 @@ def analyze_hint(topic: str, recent: str, hints: list = None, manual: bool = Fal
     return {"kind": str(r.get("kind") or "提示"), "hint": hint, "manual": manual}
 
 
-def generate_report(topic: str, score: int, forget: int, peek: int, dur: int,
+def generate_report(topic: str, score: int, peek: int, dur: int,
                     stats: dict, habits: list, analysis: dict,
-                    forget_penalty: int = 5, peek_penalty: int = 10) -> str:
+                    peek_penalty: int = 10) -> str:
     client, err = _client()
     if err:
         raise RuntimeError(err)
@@ -263,8 +263,7 @@ def generate_report(topic: str, score: int, forget: int, peek: int, dur: int,
         messages=[{
             "role": "user",
             "content": REPORT_PROMPT.format(
-                topic=topic, score=score, forget=forget, peek=peek, dur=dur,
-                fp=forget_penalty, pp=peek_penalty,
+                topic=topic, score=score, peek=peek, dur=dur, pp=peek_penalty,
                 stats_json=json.dumps(stats.get("categories", {}), ensure_ascii=False),
                 habits_json=json.dumps(habits, ensure_ascii=False),
                 analysis_json=json.dumps({

@@ -43,6 +43,8 @@ DEFAULTS = {
     },
     # 表达提示（开讲时给一句短提醒：跑题 / 缺例子 / 接下来往哪讲）
     "coach": {
+        "enabled": True,    # 开讲时的实时 AI 提示总开关；关=不出 AI 段落建议
+                            # （本地信号——语速/口头禅——不受影响，它们不耗 token）
         "prompt": "",       # 留空 = 用 analyzer.HINT_PROMPT 内置提示词；
                             # 自定义时可用 {topic} / {recent} / {hints} 三个占位符
         "every": 3,         # 每几句触发一次 AI 提示（1=每句；3=每三句，省 token）
@@ -78,14 +80,14 @@ DEFAULTS = {
 
 # 预设主题（前端应用为 CSS 变量）
 PRESETS = {
-    "carbon": {"bg": "#0F1013", "ink": "#EDEDEF", "muted": "#8A8F98",
-               "faint": "#5A5E66", "line": "rgba(237,237,239,.10)", "accent": "#E24B4A",
+    "carbon": {"bg": "#0F1013", "ink": "#EDEDEF", "muted": "#A6ABB5",
+               "faint": "#7A7F8A", "line": "rgba(237,237,239,.10)", "accent": "#E24B4A",
                "amber": "#D9A13B", "green": "#6FBF9A", "surface": "#141519", "dark": True},
-    "paper": {"bg": "#F4F2ED", "ink": "#23241F", "muted": "#6E6B62",
-              "faint": "#9C988C", "line": "rgba(35,36,31,.12)", "accent": "#B3402F",
+    "paper": {"bg": "#F4F2ED", "ink": "#23241F", "muted": "#57544B",
+              "faint": "#6E6B62", "line": "rgba(35,36,31,.12)", "accent": "#B3402F",
               "amber": "#9A6B1B", "green": "#3E7D5C", "surface": "#FFFFFF", "dark": False},
-    "forest": {"bg": "#0D1412", "ink": "#E2EAE4", "muted": "#84988D",
-               "faint": "#4E5E55", "line": "rgba(226,234,228,.10)", "accent": "#5DCAA5",
+    "forest": {"bg": "#0D1412", "ink": "#E2EAE4", "muted": "#A0B4A8",
+               "faint": "#74887C", "line": "rgba(226,234,228,.10)", "accent": "#5DCAA5",
                "amber": "#D9A13B", "green": "#6FBF9A", "surface": "#121A17", "dark": True},
 }
 
