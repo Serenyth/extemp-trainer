@@ -312,7 +312,6 @@ WebSocket 协议要点：客户端发 `{"type":"start","engine":"sherpa","model"
 
 - **音频**：麦克风数据经浏览器编码为 PCM 后通过本机 WebSocket 传输，只在后端内存缓冲中做 VAD 与推理，**任何时候都不写磁盘、不转发第三方**
 - **API Key**：仅保存在本机 `data/config.toml`；请求直接从你的电脑发往所配置的模型厂商
-- **语音模型**：缓存于 `data/models/`，体积可达数 GB，已通过 `.gitignore` 排除，删除后可随时在应用内重新下载
 - **题库 / 词表 / 历史 / 报告**：均为本地 YAML / JSON / Markdown 纯文本，可直接备份或编辑
 
 ## 技术栈
