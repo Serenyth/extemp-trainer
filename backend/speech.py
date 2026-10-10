@@ -9,7 +9,7 @@ import wave
 
 import numpy as np
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
+from paths import DATA
 
 # 镜像环境：huggingface-hub 走国内镜像；禁用 Xet 协议（Xet 会绕过镜像直连
 # cas-server.xethub.hf.co 导致 401 Unauthorized，镜像场景必须走传统 HTTP 下载）
@@ -121,7 +121,7 @@ DOWNLOAD_PATTERNS = {
 
 def _sherpa_dir(model_id: str) -> str:
     m = next((x for x in SHERPA_MODELS if x["id"] == model_id), None)
-    return os.path.join(ROOT, "data", "models", m["dir"]) if m else ""
+    return os.path.join(DATA, "models", m["dir"]) if m else ""
 
 
 def _sherpa_meta(model_id: str) -> dict:
@@ -367,7 +367,7 @@ _punct_obj = None
 
 
 def punct_model_dir() -> str:
-    return os.path.join(ROOT, "data", "models", PUNCT_MODEL["dir"])
+    return os.path.join(DATA, "models", PUNCT_MODEL["dir"])
 
 
 def punct_status() -> dict:
@@ -434,7 +434,7 @@ async def download_punct() -> dict:
 
 
 def whisper_model_dir(model_id: str) -> str:
-    return os.path.join(ROOT, "data", "models", f"whisper-{model_id}")
+    return os.path.join(DATA, "models", f"whisper-{model_id}")
 
 
 REQUIRED_FILES = ["model.bin", "config.json"]

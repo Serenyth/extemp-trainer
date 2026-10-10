@@ -3,8 +3,8 @@ import json
 import pathlib
 import time
 
-ROOT = pathlib.Path(__file__).resolve().parent
-DATA = ROOT / "data"
+from paths import DATA
+
 HISTORY_PATH = DATA / "history.json"
 REPORTS_DIR = DATA / "reports"
 
@@ -15,9 +15,15 @@ def _read_all() -> list:
     try:
         with open(HISTORY_PATH, "r", encoding="utf-8") as f:
             data = json.load(f)
-        return data if isinstance(data, list) else []
+        items = data if isinstance(data, list) else []
     except (json.JSONDecodeError, OSError):
         return []
+    # mode 是后加的字段：此前存的记录都没有，读出来统一补成命题演讲，
+    # 否则多模式上线后筛选与「对比上一场」会把老记录漏掉
+    for h in items:
+        if isinstance(h, dict) and not h.get("mode"):
+            h["mode"] = "extemp"
+    return items
 
 
 def _write_all(items: list):

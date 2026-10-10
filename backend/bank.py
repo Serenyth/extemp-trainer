@@ -3,8 +3,9 @@ import copy
 import pathlib
 import yaml
 
-ROOT = pathlib.Path(__file__).resolve().parent
-BANK_PATH = ROOT / "data" / "bank.yaml"
+from paths import DATA
+
+BANK_PATH = DATA / "bank.yaml"
 
 DEFAULT_BANK = {
     "观点思辨": [

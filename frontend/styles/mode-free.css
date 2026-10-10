@@ -1,0 +1,18 @@
+/* 自由练习模式：只有一个起始页——没有命题可抽、没有材料可选 */
+#stage-free .stage-inner{max-width:620px}
+.free-hero{padding:60px 0 44px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.free-title{font-family:var(--serif);font-weight:900;font-size:clamp(26px,4.4vw,38px);line-height:1.5}
+.free-sub{font-size:15px;line-height:1.9;color:var(--muted);max-width:440px}
+#freeTopic{
+  width:100%;max-width:420px;background:none;border:none;
+  border-bottom:1px solid var(--line);color:var(--ink);
+  font-family:var(--sans);font-size:15px;text-align:center;padding:10px 4px;
+  outline:none;transition:border-color .2s;
+}
+#freeTopic:focus{border-color:var(--muted)}
+#freeTopic::placeholder{color:var(--faint)}
+#freeStartBtn{margin-top:34px}
+@media(max-width:560px){
+  .free-hero{padding:36px 0 28px}
+  #freeStartBtn{margin-top:24px}
+}

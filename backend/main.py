@@ -10,10 +10,13 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 import analyzer
+import articles
 import bank
 import config
 import counter
 import history
+import personas
+import resumes
 import speech
 
 app = FastAPI(title="脱稿训练场", docs_url=None, redoc_url=None)
@@ -69,6 +72,49 @@ async def import_bank(mode: str = Query("merge"), file: UploadFile = File(...)):
         return bank.import_yaml(text, mode)
     except ValueError as e:
         raise HTTPException(400, f"题库文件格式错误：{e}")
+
+
+# ---------------- 朗读材料库 ----------------
+
+@app.get("/api/articles")
+def get_articles():
+    return articles.load()
+
+
+@app.put("/api/articles")
+def put_articles(data: dict):
+    try:
+        return articles.save(data.get("articles", data))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+# ---------------- 简历库与面试官人设 ----------------
+
+@app.get("/api/resumes")
+def get_resumes():
+    return resumes.load()
+
+
+@app.put("/api/resumes")
+def put_resumes(data: dict):
+    try:
+        return resumes.save(data.get("resumes", data))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+@app.get("/api/personas")
+def get_personas():
+    return personas.list_all()
+
+
+@app.put("/api/personas")
+def put_personas(data: dict):
+    try:
+        return personas.save(data.get("personas", data))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
 
 
 # ---------------- 词表 ----------------
@@ -242,6 +288,9 @@ class HintReq(BaseModel):
     hints: list = []
     manual: bool = False
     notes: str = ""
+    mode: str = "extemp"
+    reference: str = ""      # 朗读模式的原文，给 AI 对照
+    question: str = ""       # 面试模式：这一轮面试官问的那句话
 
 
 @app.post("/api/analyze/hint")
@@ -253,7 +302,8 @@ async def analyze_hint(req: HintReq):
     """
     try:
         return await asyncio.get_running_loop().run_in_executor(
-            None, analyzer.analyze_hint, req.topic, req.recent, req.hints, req.manual, req.notes)
+            None, analyzer.analyze_hint, req.topic, req.recent, req.hints, req.manual,
+            req.notes, req.mode, req.reference, req.question)
     except RuntimeError as e:
         raise HTTPException(400, str(e))
     except Exception as e:
@@ -263,14 +313,111 @@ async def analyze_hint(req: HintReq):
 class SentenceReq(BaseModel):
     topic: str
     transcript: str
+    mode: str = "extemp"
+    reference: str = ""      # 朗读模式的原文
+    question: str = ""       # 面试模式：这一轮面试官问的那句话
 
 
 @app.post("/api/analyze/sentences")
 async def analyze_sentences(req: SentenceReq):
     try:
         result = await asyncio.get_running_loop().run_in_executor(
-            None, analyzer.analyze_sentences, req.topic, req.transcript)
+            None, analyzer.analyze_sentences, req.topic, req.transcript, req.mode,
+            req.reference, req.question)
         return result
+    except RuntimeError as e:
+        raise HTTPException(400, str(e))
+    except Exception as e:
+        raise HTTPException(502, f"AI 调用失败：{speech.err_log(e)}")
+
+
+# ---------------- 面试 ----------------
+
+class BriefReq(BaseModel):
+    resume: str
+    target: str = ""
+
+
+@app.post("/api/interview/brief")
+async def interview_brief(req: BriefReq):
+    """进场前读一遍简历：压成摘要 + 疑点清单，之后每轮追问只带摘要"""
+    try:
+        return await asyncio.get_running_loop().run_in_executor(
+            None, analyzer.interview_brief, req.resume, req.target)
+    except RuntimeError as e:
+        raise HTTPException(400, str(e))
+    except Exception as e:
+        raise HTTPException(502, f"AI 调用失败：{speech.err_log(e)}")
+
+
+class NextReq(BaseModel):
+    persona_id: str = "hr"
+    target: str = ""
+    brief: str = ""
+    suspects: list = []
+    asked: list = []
+    transcript: str = ""
+    trigger: str = "答完了"
+    round: int = 1
+    patience: int = 100
+    init_patience: int = 100
+    streak: int = 0          # 连续答得不好的轮数，≥2 时会让面试官当场点出来
+
+
+@app.post("/api/interview/next")
+async def interview_next(req: NextReq):
+    """生成面试官的下一句话。trigger 决定这句话是开场、追问、施压还是收尾"""
+    try:
+        return await asyncio.get_running_loop().run_in_executor(
+            None, analyzer.interview_next, personas.get(req.persona_id), req.target,
+            req.brief, req.suspects, req.asked, req.transcript, req.trigger,
+            req.round, req.patience, req.init_patience, req.streak)
+    except RuntimeError as e:
+        raise HTTPException(400, str(e))
+    except Exception as e:
+        raise HTTPException(502, f"AI 调用失败：{speech.err_log(e)}")
+
+
+class CloseReq(BaseModel):
+    persona_id: str = "hr"
+    persona: dict | None = None
+    target: str = ""
+    rounds: list = []        # [{q, text}]
+    patience: int = 100
+    init_patience: int = 100
+    reason: str = ""
+
+
+@app.post("/api/interview/close")
+async def interview_close(req: CloseReq):
+    """面试官提前收场时的收尾话（常常带一句「你有什么想了解的吗」）"""
+    persona = req.persona if isinstance(req.persona, dict) and req.persona.get("style") \
+        else personas.get(req.persona_id)
+    try:
+        return await asyncio.get_running_loop().run_in_executor(
+            None, analyzer.interview_close, persona, req.target, req.rounds,
+            req.patience, req.init_patience, req.reason)
+    except RuntimeError as e:
+        raise HTTPException(400, str(e))
+    except Exception as e:
+        raise HTTPException(502, f"AI 调用失败：{speech.err_log(e)}")
+
+
+class OpeningReq(BaseModel):
+    persona_id: str = "hr"
+    persona: dict | None = None   # 设置页「AI 生成」传的是还没保存的表单内容
+    target: str = ""
+    brief: str = ""
+
+
+@app.post("/api/interview/opening")
+async def interview_opening(req: OpeningReq):
+    """AI 现场生成面试官的开场白（人设里没写 opening 时用）"""
+    persona = req.persona if isinstance(req.persona, dict) and req.persona.get("style") \
+        else personas.get(req.persona_id)
+    try:
+        return await asyncio.get_running_loop().run_in_executor(
+            None, analyzer.interview_opening, persona, req.target, req.brief)
     except RuntimeError as e:
         raise HTTPException(400, str(e))
     except Exception as e:
@@ -280,12 +427,16 @@ async def analyze_sentences(req: SentenceReq):
 class ReportReq(BaseModel):
     entry_id: str
     topic: str
-    score: int
+    score: int | None = None     # 自由练习不评分
     peek: int
     duration_sec: int
     stats: dict
     habits: list
     analysis: dict
+    mode: str = "extemp"
+    rounds: list = []                    # 面试模式：每一轮的问答
+    patience: int | None = None          # 面试模式：结束时剩下的耐心
+    init_patience: int = 100
 
 
 @app.post("/api/report")
@@ -296,7 +447,8 @@ async def gen_report(req: ReportReq):
             None, lambda: analyzer.generate_report(
                 req.topic, req.score, req.peek, req.duration_sec,
                 req.stats, req.habits, req.analysis,
-                cfg["peek_penalty"]))
+                cfg["peek_penalty"], req.mode,
+                req.rounds, req.patience, req.init_patience))
         history.save_report(req.entry_id, md)
         return {"id": req.entry_id, "markdown": md}
     except RuntimeError as e:
@@ -318,13 +470,29 @@ def get_report(entry_id: str):
 class HistoryEntry(BaseModel):
     topic: str
     cat: str = ""
-    score: int
-    forget: int = 0
+    # 自由练习不评分 → None。计分的模式永远是整数，两者不能混为一谈
+    score: int | None = None
+    # 训练模式。老记录没有这个字段，history 读取时会补成 extemp
+    mode: str = "extemp"
     peek: int = 0
+    hint: int = 0
+    # 结算页回看：把当时那一屏原样存下来，历史里点开才能复现整页，
+    # 而不是只有一条分数（指标卡/评级/扣分规则都由各模式自己给）
+    rating: str = ""
+    rule: str = ""
+    cells: list = []
+    stuck: int = 0
+    stuck_ms: int = 0
+    # 卡壳扣分：一场里因沉默累计扣掉的分（命题演讲）
+    stuck_penalty: int = 0
     dur: int = 0
     transcript: str = ""
     stats: dict = {}
     analysis: dict = {}
+    # 面试模式：一条历史 = 一场面试，里面是若干轮问答
+    rounds: list = []
+    patience: int | None = None
+    init_patience: int = 100
 
 
 @app.post("/api/history")
@@ -545,6 +713,6 @@ async def ws_speech(ws: WebSocket):
 
 # ---------------- 静态前端（最后挂载） ----------------
 
-import pathlib
-FRONTEND_DIR = pathlib.Path(__file__).resolve().parent.parent / "frontend"
-app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+from paths import FRONTEND
+
+app.mount("/", StaticFiles(directory=str(FRONTEND), html=True), name="frontend")

@@ -4,8 +4,9 @@ import pathlib
 import re
 import yaml
 
-ROOT = pathlib.Path(__file__).resolve().parent
-WORDS_PATH = ROOT / "data" / "words.yaml"
+from paths import DATA
+
+WORDS_PATH = DATA / "words.yaml"
 
 DEFAULT_WORDS = {
     "filler": ["嗯", "啊", "呃", "那个", "这个", "然后", "就是说", "就是", "其实", "反正"],

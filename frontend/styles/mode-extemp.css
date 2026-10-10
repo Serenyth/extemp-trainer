@@ -1,0 +1,100 @@
+/* 命题演讲模式：抽题页 + 备稿页（含提纲笔记）+ 偷看纸条。
+   看稿扣分是命题演讲的规则，朗读练习本就看稿，不该共用这部分 */
+.topic-hero{padding:52px 0 44px;min-height:210px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.topic-text{font-family:var(--serif);font-weight:900;font-size:clamp(26px,4.6vw,40px);line-height:1.6;max-width:560px}
+.topic-text.empty{color:var(--faint);font-size:clamp(18px,3vw,24px);font-weight:600}
+.topic-text.settle{animation:settle .55s var(--ease)}
+@keyframes settle{from{opacity:0;transform:scale(.93);filter:blur(6px)}to{opacity:1;transform:scale(1);filter:blur(0)}}
+.scrambling .topic-text{opacity:.25;filter:blur(2px)}
+.topic-cat{font-family:var(--mono);font-size:13px;letter-spacing:.4em;color:var(--muted);margin-top:26px;opacity:0;transition:opacity .5s ease .15s}
+.topic-hero.settled .topic-cat{opacity:1}
+.draw-btn{font-family:var(--serif);font-weight:900;font-size:16px;letter-spacing:.4em;padding:15px 52px 15px 58px;background:var(--ink);color:var(--bg);border:none;transition:all .2s var(--ease)}
+.draw-btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px color-mix(in srgb,var(--ink) 13%,transparent)}
+.next-btn{margin-top:16px;background:var(--ink);color:var(--bg);border:1px solid var(--ink);border-radius:999px;cursor:pointer;font-size:14px;letter-spacing:.2em;opacity:0;pointer-events:none;transition:all .4s ease;padding:11px 30px}
+.next-btn.show{opacity:1;pointer-events:auto}.next-btn:hover{opacity:.88;color:var(--bg)}
+.cat-chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.cat-chip{background:none;border:1px solid var(--line);color:var(--muted);font-size:13px;padding:5px 14px;border-radius:99px;transition:all .15s}
+.cat-chip:hover{border-color:var(--line-strong);color:var(--ink)}
+.cat-chip.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.custom-add{display:flex;gap:8px;margin:12px 0}
+.custom-add input{flex:1;background:none;border:none;border-bottom:1px solid var(--line);color:var(--ink);font-family:var(--sans);font-size:15px;padding:8px 2px;outline:none;transition:border-color .2s}
+.custom-add input:focus{border-color:var(--muted)}.custom-add input::placeholder{color:var(--faint)}
+.custom-add button{background:none;border:1px solid var(--line);color:var(--muted);font-size:13px;padding:6px 16px;transition:all .15s}
+.custom-add button:hover{border-color:var(--line-strong);color:var(--ink)}
+/* 分类下拉：抽题页加的命题不必都堆在「自定义」，直接归到要练的那一类 */
+.custom-add select,.custom-list .cc{
+  flex:none;max-width:112px;background:none;border:1px solid var(--line);border-radius:6px;
+  color:var(--muted);font-size:13px;padding:5px 6px;cursor:pointer;
+}
+.custom-add select:hover,.custom-list .cc:hover{border-color:var(--line-strong);color:var(--ink)}
+.custom-list{list-style:none;display:flex;flex-direction:column}
+.custom-list li{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;color:var(--muted);padding:7px 4px;border-bottom:1px solid var(--line);text-align:left}
+.custom-list li .ct{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.custom-list .del{cursor:pointer;color:var(--faint);font-family:var(--mono);font-size:13px;background:none;border:none;letter-spacing:.1em;opacity:0;transition:opacity .15s}
+.custom-list li:hover .del{opacity:1}.custom-list .del:hover{color:var(--red)}
+.custom-empty{font-size:13px;color:var(--muted);padding:10px 4px}
+
+.countdown{font-family:var(--mono);font-weight:600;font-size:clamp(64px,11vw,104px);line-height:1;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.countdown.warn{color:var(--red)}
+.prep-bar{height:1px;background:var(--line);width:min(320px,80%);margin:22px auto 0;position:relative;overflow:hidden}
+.prep-bar i{position:absolute;inset:0;background:var(--ink);transform-origin:left;transition:transform 1s linear}
+.timeup-note{font-family:var(--mono);font-size:13px;letter-spacing:.35em;color:var(--amber);margin-top:18px;opacity:0;transition:opacity .5s}
+.timeup-note.show{opacity:1}
+.dur-row{display:flex;gap:4px;align-items:center;margin:26px 0 8px;justify-content:center;flex-wrap:wrap}
+.dur-label{font-family:var(--mono);font-size:13px;letter-spacing:.25em;color:var(--muted);margin-right:10px}
+.dur-btn{background:none;border:1px solid var(--line);border-radius:999px;cursor:pointer;color:var(--muted);font-family:var(--mono);font-size:13px;padding:6px 14px;transition:all .15s}
+.dur-btn:hover{color:var(--muted)}.dur-btn.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+/* 备稿结束后的自动开讲倒计时：跟在"立即开讲"按钮后面 */
+.auto-start{
+  font-family:var(--mono);font-size:14px;letter-spacing:.18em;color:var(--amber);
+  border:1px solid var(--amber);padding:9px 14px;line-height:1;white-space:nowrap;
+}
+.auto-start b{font-size:16px;font-weight:500;font-variant-numeric:tabular-nums}
+.auto-start[hidden]{display:none}
+
+/* 备稿提纲：一行一条，类型 + 内容，可拖拽排序 */
+.notes-area{width:100%;min-height:180px;background:none;border:none;border-top:1px solid var(--line);color:var(--ink);font-family:var(--sans);font-size:15px;padding:12px 2px;outline:none;resize:vertical;line-height:1.9;text-align:left}
+.notes-area::placeholder{color:var(--faint)}
+.notes-fold{margin-top:36px}
+.notes-fold.open .fold-body{max-height:1800px}
+.notes-count{margin-left:auto;font-family:var(--mono);font-size:13px;color:var(--muted);letter-spacing:.08em;font-weight:400}
+.ot-tpl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:0 0 12px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.ot-tpl-label{font-family:var(--mono);font-size:13px;letter-spacing:.2em;color:var(--muted);margin-right:4px}
+.ot-chip{background:none;border:1px solid var(--line);color:var(--muted);font-size:13px;padding:4px 12px;border-radius:99px;transition:all .15s}
+.ot-chip:hover{border-color:var(--line-strong);color:var(--ink)}
+.ot-chip.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.ot-chip.ghost{color:var(--faint)}
+.ot-chip.ghost:hover{color:var(--red);border-color:var(--red)}
+.ot-list{display:flex;flex-direction:column;width:100%}
+.ot-row{display:flex;align-items:center;gap:8px;padding:2px 0;border-top:1px solid transparent;border-bottom:1px solid transparent;transition:opacity .2s,border-color .15s}
+.ot-row.drag{opacity:.3}
+.ot-row.ot-over-t{border-top-color:var(--ink)}
+.ot-row.ot-over-b{border-bottom-color:var(--ink)}
+.ot-grip{cursor:grab;color:var(--faint);font-size:15px;line-height:1;padding:4px 1px;user-select:none;transition:color .15s}
+.ot-grip:hover{color:var(--muted)}
+.ot-grip:active{cursor:grabbing}
+.ot-kind{background:none;border:none;border-bottom:1px solid var(--line);color:var(--muted);font-family:var(--sans);font-size:13px;padding:8px 2px;outline:none;border-radius:0;width:58px;flex:none;transition:color .15s,border-color .15s}
+.ot-kind:focus,.ot-kind:hover{color:var(--ink);border-bottom-color:var(--muted)}
+.ot-kind option{background:var(--surface);color:var(--ink)}
+.ot-text{flex:1;min-width:0;background:none;border:none;border-bottom:1px solid transparent;color:var(--ink);font-family:var(--sans);font-size:15px;padding:8px 2px;outline:none;text-align:left}
+.ot-text::placeholder{color:var(--faint)}
+.ot-text:focus{border-bottom-color:var(--line)}
+.ot-text.long{border-bottom-color:var(--amber)}
+.ot-del{background:none;border:none;color:var(--faint);font-size:16px;line-height:1;padding:2px 4px;flex:none;opacity:0;transition:opacity .15s,color .15s}
+.ot-row:hover .ot-del{opacity:1}
+.ot-del:hover{color:var(--red)}
+.ot-add{margin-top:10px;background:none;border:1px dashed var(--line);color:var(--muted);font-size:13px;padding:7px 16px;width:100%;transition:all .15s}
+.ot-add:hover{border-color:var(--line-strong);color:var(--ink)}
+.ot-free-label{font-family:var(--mono);font-size:13px;letter-spacing:.2em;color:var(--muted);margin:20px 0 0;text-align:left;width:100%}
+
+/* 偷看纸条 */
+.overlay{position:fixed;inset:0;background:rgba(8,9,11,.78);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:50;padding:24px;opacity:0;pointer-events:none;transition:opacity .3s ease}
+.overlay.show{opacity:1;pointer-events:auto}
+.paper{background:#F2EDE3;color:#29241E;width:min(500px,100%);padding:36px 34px;position:relative;transform:scale(.88) translateY(10px);opacity:0;transition:transform .4s var(--ease),opacity .3s ease;box-shadow:0 30px 80px rgba(0,0,0,.55)}
+.overlay.show .paper{transform:scale(1) translateY(0);opacity:1}
+.paper h3{font-family:var(--serif);font-weight:900;font-size:15px;letter-spacing:.3em;margin-bottom:18px;color:#5C4033}
+.paper .p-notes{font-size:16px;line-height:2;white-space:pre-wrap;text-align:left;min-height:56px}
+.paper .p-empty{color:rgba(41,36,30,.35);font-size:14px}
+.paper .p-foot{margin-top:24px;padding-top:12px;border-top:1px solid rgba(41,36,30,.15);display:flex;justify-content:space-between;font-family:var(--mono);font-size:13px;color:rgba(41,36,30,.55)}
+.paper .p-bar{height:2px;background:rgba(41,36,30,.1);margin-top:10px;overflow:hidden}
+.paper .p-bar i{display:block;height:100%;background:#A24E2E;width:100%}

@@ -1,0 +1,89 @@
+/* 基础层：主题变量、重置、页头、阶段容器、折叠、按钮、提示条。所有模式共用 */
+:root{
+  --bg:#0F1013; --ink:#EDEDEF; --muted:#A6ABB5; --faint:#7A7F8A;
+  --line:rgba(237,237,239,.10); --line-strong:rgba(237,237,239,.24);
+  --red:#E24B4A; --amber:#D9A13B; --green:#6FBF9A; --surface:#141519;
+  --filler:#E24B4A; --hedging:#D9A13B; --vague:#7F9BE8;
+  --serif:'Noto Serif SC',serif; --mono:'IBM Plex Mono',monospace;
+  --sans:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+  --ease:cubic-bezier(.22,.75,.25,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.7;overflow:hidden}
+::selection{background:color-mix(in srgb,var(--red) 35%,transparent)}
+button{font-family:inherit;cursor:pointer}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--line-strong)}::-webkit-scrollbar-track{background:transparent}
+
+#app{height:100dvh;display:flex;flex-direction:column}
+.chrome{display:flex;align-items:center;justify-content:space-between;padding:20px 28px;flex-shrink:0;transition:opacity .6s ease;z-index:5}
+body.immersive .chrome{opacity:.14} body.immersive .chrome:hover{opacity:1}
+.chrome-left{display:flex;align-items:center;gap:22px}
+.chrome-right{display:flex;align-items:center;gap:18px}
+/* 模式切换：常驻页头，切的是"练什么"，不是页面 */
+.mode-switch{display:flex;gap:2px;background:none}
+.mode-btn{
+  background:none;border:none;border-bottom:2px solid transparent;
+  font-family:var(--serif);font-weight:600;font-size:17px;letter-spacing:.14em;
+  color:var(--faint);padding:2px 4px 4px;transition:color .18s,border-color .18s;
+}
+.mode-btn:hover{color:var(--muted)}
+.mode-btn.on{color:var(--ink);border-bottom-color:var(--red)}
+@media(max-width:560px){.mode-btn{font-size:15px;letter-spacing:.06em}}
+.streak{font-family:var(--mono);font-size:13px;color:var(--muted);letter-spacing:.08em}
+.streak b{color:var(--muted);font-weight:500}.streak.lit b{color:var(--amber)}
+.icon-btn{background:none;border:1px solid transparent;border-radius:999px;cursor:pointer;color:var(--muted);font-size:14px;letter-spacing:.2em;padding:5px 14px;transition:all .15s}
+.icon-btn:hover{color:var(--ink);border-color:var(--line-strong)}
+.phase-dots{display:flex;gap:10px;align-items:center}
+.phase-dots i{width:5px;height:5px;border-radius:50%;background:var(--faint);opacity:.5;transition:all .5s var(--ease)}
+.phase-dots i.on{background:var(--ink);opacity:1;transform:scale(1.35)}
+.phase-dots i.done{background:var(--muted);opacity:.7}
+@media(max-width:560px){.phase-dots{display:none}}
+
+#stages{position:relative;flex:1;overflow:hidden}
+/* 所有阶段叠在同一处：非活跃的阶段必须彻底失效。
+   只靠 opacity:0 + pointer-events:none 不够——子元素里只要有 pointer-events:auto
+   （命题演讲抽过题后「进入备稿」就带着 .show），父级那句 none 会被它穿过去，
+   变成一枚看不见却能点的按钮，正好落在别的页面上。visibility 会从整个子树上断掉命中测试。
+   visibility 也进 transition：它按「两端有一个 visible 则过程中保持可见」插值，
+   所以淡出动画照旧，动画结束才真正不可见 */
+.stage{position:absolute;inset:0;display:flex;overflow-y:auto;padding:24px;opacity:0;pointer-events:none;visibility:hidden;transform:scale(1.03);transition:opacity .5s ease,transform .55s var(--ease),visibility .55s}
+.stage.active{opacity:1;pointer-events:auto;visibility:visible;transform:scale(1)}
+.stage.leaving{transform:scale(.97)}
+.stage-inner{margin:auto;width:100%;max-width:660px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.stage-inner.wide{max-width:min(1560px,96vw)}
+.stage-topic{font-family:var(--serif);font-weight:600;font-size:17px;line-height:1.6;max-width:520px;margin-bottom:6px}
+/* [hidden] 会被任何显式 display 盖掉，这里钉死一次（面试模式没有题目行） */
+.stage-topic[hidden]{display:none}
+.stage-cat{font-family:var(--mono);font-size:13px;letter-spacing:.35em;color:var(--muted);margin-bottom:34px}
+.topic-label{font-family:var(--mono);font-size:13px;letter-spacing:.5em;color:var(--muted);margin-bottom:26px}
+
+.fold{width:100%;text-align:left}
+.fold-head{display:flex;align-items:center;gap:10px;cursor:pointer;background:none;border:none;color:var(--faint);font-family:var(--mono);font-size:13px;letter-spacing:.18em;padding:6px 0;transition:color .15s;user-select:none}
+.fold-head:hover{color:var(--muted)}
+.fold-head .caret{display:inline-block;font-size:13px;transition:transform .35s var(--ease)}
+.fold.open .fold-head{color:var(--muted)}
+.fold.open .fold-head .caret{transform:rotate(90deg)}
+.fold-body{max-height:0;overflow:hidden;opacity:0;transition:max-height .45s var(--ease),opacity .3s ease}
+.fold.open .fold-body{max-height:560px;opacity:1}
+
+.btn-row{display:flex;gap:26px;align-items:center;margin-top:30px;flex-wrap:wrap;justify-content:center}
+/* 按钮体系：次要=描边胶囊，主操作=实底胶囊。
+   此前是"无底无框的纯文字 + 悬停一条下划线"，实测用户分不出它是按钮 */
+.text-btn{
+  background:none;border:1px solid var(--line-strong);border-radius:999px;
+  font-size:14px;letter-spacing:.2em;color:var(--muted);padding:10px 22px;cursor:pointer;
+  transition:color .15s,border-color .15s,background .15s,opacity .15s;
+}
+.text-btn:hover{color:var(--ink);border-color:var(--ink)}
+.text-btn.danger:hover{color:var(--red);border-color:var(--red)}
+.text-btn:disabled{opacity:.32;cursor:default;border-color:var(--line)}
+/* 主操作：实底胶囊（立即开讲 / 结束汇报 / AI 复盘 / 再来一轮） */
+.text-btn.accent,.text-btn.primary-action{
+  color:var(--bg);background:var(--ink);border-color:var(--ink);
+  font-size:15px;padding:11px 26px;
+}
+.text-btn.accent:hover,.text-btn.primary-action:hover{opacity:.88;color:var(--bg)}
+.text-btn.primary-action:disabled{opacity:.35;background:var(--faint);border-color:transparent}
+
+.toast{position:fixed;left:50%;bottom:30px;transform:translate(-50%,80px);background:var(--surface);border:1px solid var(--line-strong);color:var(--ink);font-size:14px;padding:10px 22px;z-index:99;transition:transform .35s var(--ease);letter-spacing:.05em}
+.toast.show{transform:translate(-50%,0)}

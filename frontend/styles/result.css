@@ -1,0 +1,108 @@
+/* 结算页：成绩头 + 本场指标 + 两栏（左字稿点评 / 右对比与趋势）+ AI 复盘
+   骨架通用，指标卡与点评内容由各模式自己填（见 js/result.js） */
+/* 结算页两栏：左字稿 / 右成绩与点评 */
+.result-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:34px;width:100%;align-items:start;text-align:left}
+/* 没有转写文本时左栏是空的，收成单栏，别把右栏孤零零甩在右边 */
+.result-grid.solo{grid-template-columns:1fr;max-width:820px;margin:0 auto}
+@media(max-width:900px){.result-grid{grid-template-columns:1fr;gap:22px}}
+.result-col{text-align:left}
+/* 成绩头：大分数与评级横排，省掉一整行高度 */
+.result-hero{display:flex;align-items:baseline;justify-content:center;gap:28px;margin-bottom:20px;flex-wrap:wrap}
+.score-side{text-align:left;max-width:340px}
+
+.score-num{font-family:var(--mono);font-weight:600;font-size:clamp(80px,14vw,128px);line-height:1;font-variant-numeric:tabular-nums;animation:scoreIn .7s var(--ease)}
+@keyframes scoreIn{from{opacity:0;transform:scale(1.18);filter:blur(8px)}to{opacity:1;transform:scale(1);filter:blur(0)}}
+.score-num.good{color:var(--green)}.score-num.mid{color:var(--amber)}.score-num.bad{color:var(--red)}
+.score-rating{font-family:var(--serif);font-weight:900;font-size:20px;letter-spacing:.5em;margin:0 0 8px;padding-left:.5em}
+.score-rule{font-family:var(--mono);font-size:13px;letter-spacing:.15em;color:var(--muted);line-height:1.9}
+.stat-row{display:flex;gap:0;margin:40px 0 26px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.stat-cell{padding:16px 26px;border-right:1px solid var(--line)}
+.stat-cell:first-child{border-left:1px solid var(--line)}
+.stat-cell .sv{font-family:var(--mono);font-weight:500;font-size:22px;font-variant-numeric:tabular-nums}
+.stat-cell .sv.pen{color:var(--red)}
+.stat-cell .sk{font-family:var(--mono);font-size:13px;letter-spacing:.3em;color:var(--muted);margin-top:2px}
+.audio-wrap{margin-bottom:8px;width:min(420px,90%)}
+.audio-wrap audio{width:100%;height:32px}
+.audio-label{font-family:var(--mono);font-size:13px;letter-spacing:.2em;color:var(--muted);margin-bottom:8px}
+
+/* 右栏卡片：对比上一场 / 历史趋势 */
+.side-card{margin-bottom:28px}
+.side-card h3{font-family:var(--mono);font-size:14px;letter-spacing:.3em;color:var(--muted);margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.cmp-row{display:flex;align-items:baseline;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px;color:var(--muted)}
+.cmp-row .ck{flex:none;min-width:64px}
+.cmp-row .cv{flex:1;font-family:var(--mono);font-size:16px;color:var(--ink);font-variant-numeric:tabular-nums}
+.cmp-row .cd{flex:none;font-family:var(--mono);font-size:13px;min-width:70px;text-align:right;color:var(--muted)}
+.cmp-row .cd.good{color:var(--green)}.cmp-row .cd.bad{color:var(--filler)}
+.cmp-none{font-size:13px;color:var(--muted);line-height:1.9}
+.rtrend{display:flex;align-items:flex-end;gap:5px;height:78px;padding:8px 0;border-bottom:1px solid var(--line)}
+.rtrend i{flex:1;min-width:3px;min-height:2px;background:var(--line-strong);border-radius:1px;transition:height .4s var(--ease)}
+.rtrend i.hi{background:var(--green);opacity:.75}
+.rtrend i.cur{background:var(--ink);opacity:1}
+/* 不评分的场次：柱子只表示"练过这一场"，不参与分数曲线 */
+.rtrend i.none{background:var(--faint);opacity:.35}
+.rtrend-note{font-size:13px;color:var(--muted);margin-top:10px;line-height:1.9}
+
+/* 转写标记视图 */
+.transcript-sec{width:100%;margin-top:0;text-align:left}
+.transcript-sec h3{font-family:var(--mono);font-size:14px;letter-spacing:.3em;color:var(--muted);margin-bottom:14px}
+.ts-head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:14px;flex-wrap:wrap}
+.ts-head h3{margin:0}
+.ts-tools{display:flex;gap:16px;align-items:baseline}
+.ts-tools .text-btn{font-size:13px;letter-spacing:.2em}
+.ts-tools .text-btn:disabled{opacity:.3;pointer-events:none}
+.mark-legend{display:flex;gap:18px;margin-bottom:14px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);cursor:pointer;user-select:none}
+.legend-item .sw{width:10px;height:10px;border-radius:2px}
+.legend-item.off{opacity:.35}
+.legend-item b{font-weight:500;font-variant-numeric:tabular-nums}
+.transcript-text{
+  font-family:var(--serif);
+  font-size:clamp(18px,1.8vw,23px);line-height:2.3;padding:22px 20px;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  white-space:pre-wrap;max-height:min(62vh,640px);overflow-y:auto;
+}
+.transcript-text.editing{outline:none;background:color-mix(in srgb,var(--ink) 3%,transparent)}
+/* 内联点评：AI 复盘后直接挂在对应句子下面，可整体显示/隐藏 */
+.transcript-text .sent{position:relative}
+.transcript-text .sent.noted{
+  border-left:2px solid var(--line-strong);padding-left:10px;margin-left:-12px;
+  background:color-mix(in srgb,var(--ink) 2.5%,transparent);
+}
+.transcript-text .sent.sev-warn{border-color:var(--amber)}
+.transcript-text .sent.sev-error{border-color:var(--filler)}
+.sent-note{
+  display:none;font-family:var(--sans);font-size:14px;line-height:1.85;
+  color:var(--muted);padding:4px 0 10px 2px;
+}
+.transcript-text.show-notes .sent-note{display:block;animation:noteIn .3s var(--ease)}
+@keyframes noteIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+.sent-note .sn-i{color:var(--amber)}
+.sent-note .sn-s{color:var(--green)}
+mk{border-bottom:2px solid;padding:0 1px;border-radius:1px;cursor:default}
+mk.f{border-color:var(--filler);color:var(--filler)}
+mk.h{border-color:var(--hedging);color:var(--hedging)}
+mk.v{border-color:var(--vague);color:var(--vague)}
+.word-stats{display:flex;gap:26px;margin:14px 0 0;flex-wrap:wrap;justify-content:center}
+.word-stat{font-size:13px;color:var(--muted)}
+.word-stat b{font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums}
+.habit-line{font-size:13px;color:var(--muted);margin-top:8px}
+
+/* AI 分析与报告：合并成一块，两个按钮都按需触发 */
+.ai-sec{width:100%;margin-top:34px;text-align:left}
+.ai-sec h3{font-family:var(--mono);font-size:14px;letter-spacing:.3em;color:var(--muted);margin:0}
+.ai-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px;flex-wrap:wrap}
+.ai-acts{display:flex;gap:10px;flex-wrap:wrap}
+.ai-acts .text-btn{padding:9px 20px;letter-spacing:.2em}
+.ai-summary{font-size:15px;color:var(--ink);border-top:1px solid var(--line);padding-top:12px;margin-top:14px;line-height:1.9}
+.ai-status{font-family:var(--mono);font-size:13px;letter-spacing:.15em;color:var(--muted)}
+.ai-status.err{color:var(--red)}
+.spin{display:inline-block;width:11px;height:11px;border:1.5px solid var(--faint);border-top-color:var(--ink);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-1px;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* 报告 */
+.report-md{font-size:15px;line-height:2;max-height:420px;overflow-y:auto;border-top:1px solid var(--line);padding-top:14px}
+.report-md h2{font-family:var(--serif);font-weight:900;font-size:16px;margin:18px 0 8px;letter-spacing:.1em}
+.report-md p{margin:6px 0;color:var(--muted)}
+.report-md li{margin:4px 0 4px 20px;color:var(--muted)}
+.report-md strong{color:var(--ink);font-weight:600}
+.report-md h1{font-size:18px}

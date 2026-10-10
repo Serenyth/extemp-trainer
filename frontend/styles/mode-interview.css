@@ -1,0 +1,171 @@
+/* 面试模拟模式：挑简历 / 选人设 两个起始页 + 开讲页的面试官面板 */
+
+/* ---------- 挑简历 ---------- */
+#stage-intv-resume .stage-inner,
+#stage-intv-setup .stage-inner{max-width:620px}
+.intv-noai{
+  margin:18px auto 0;max-width:420px;padding:10px 14px;border:1px solid var(--red);
+  border-radius:10px;color:var(--red);font-size:13px;line-height:1.7;text-align:center;
+}
+.intv-noai[hidden]{display:none}
+
+.resume-list{display:flex;flex-direction:column;gap:10px;margin:28px 0 22px}
+.resume-empty{padding:28px 0;text-align:center;font-size:14px;color:var(--faint)}
+.resume-item{
+  display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;
+  border:1px solid var(--line);border-radius:12px;background:var(--surface);
+  transition:border-color .15s,background .15s;
+}
+.resume-item:hover{border-color:var(--line-strong)}
+.resume-item.on{border-color:var(--ink);background:var(--bg)}
+.ri-main{flex:1;min-width:0}
+.ri-name{font-family:var(--serif);font-weight:900;font-size:16px;line-height:1.5}
+.ri-target{font-size:13px;color:var(--muted);margin-top:2px}
+.ri-len{font-family:var(--mono);font-size:13px;color:var(--faint);margin-top:4px}
+.ri-edit{
+  background:none;border:1px solid var(--line);border-radius:999px;color:var(--muted);
+  font-size:13px;letter-spacing:.1em;padding:5px 12px;cursor:pointer;transition:color .15s,border-color .15s;
+}
+.ri-edit:hover{color:var(--ink);border-color:var(--line-strong)}
+#intvTarget{
+  width:100%;max-width:420px;background:none;border:none;
+  border-bottom:1px solid var(--line);color:var(--ink);
+  font-family:var(--sans);font-size:15px;text-align:center;padding:10px 4px;outline:none;
+  transition:border-color .2s;
+}
+#intvTarget:focus{border-color:var(--muted)}
+#intvTarget::placeholder{color:var(--faint)}
+/* .next-btn 默认 opacity:0 + pointer-events:none（命题演讲抽到题才淡入）。
+   面试这两步没有前置条件：不选简历也能练、不选人设也有默认面试官，
+   所以这两个按钮要一直显形——写在 CSS 里，免得哪次忘了加 .show 又变成隐形按钮 */
+#intvToSetupBtn{opacity:1;pointer-events:auto}
+#intvStartBtn{opacity:1;pointer-events:auto}
+#intvToSetupBtn:hover,#intvStartBtn:hover{opacity:.88}
+#intvToSetupBtn{margin-top:30px}
+#intvToSetupBtn:disabled{opacity:.32;cursor:default;pointer-events:none}
+.resume-fold{margin-top:40px;border-top:1px solid var(--line);padding-top:4px}
+.resume-text{min-height:220px}
+.resume-tip{font-size:13px;color:var(--faint);line-height:1.7;padding:0 2px}
+
+/* ---------- 选人设 ---------- */
+.intv-meta{
+  display:flex;align-items:baseline;justify-content:center;gap:12px;
+  font-size:13px;color:var(--muted);margin-bottom:26px;
+}
+.im-name{font-family:var(--serif);font-weight:900;font-size:15px;color:var(--ink)}
+.im-len,.im-none{font-family:var(--mono);font-size:13px;color:var(--faint)}
+.persona-list{display:flex;flex-direction:column;gap:10px}
+/* 颜色必须显式写：这张卡片原生是 <button>，浏览器默认给按钮黑字，
+   黑字落在近黑的底色上就「隐形」了；现在换成了 div，照旧显式声明防回退 */
+.persona{
+  display:flex;align-items:center;gap:14px;text-align:left;
+  background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  padding:14px 16px;cursor:pointer;transition:border-color .15s,background .15s;
+  color:var(--ink);
+}
+.persona:hover{border-color:var(--line-strong)}
+.persona.on{border-color:var(--ink);background:var(--bg)}
+.p-main{flex:1;min-width:0}
+.p-name{font-family:var(--serif);font-weight:900;font-size:16px;line-height:1.5;color:var(--ink)}
+.p-desc{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.7}
+.p-meta{font-family:var(--mono);font-size:13px;color:var(--faint);margin-top:6px}
+.setup-rows{display:flex;flex-direction:column;gap:14px;margin:26px 0 8px}
+.setup-rows .sr{display:flex;align-items:center;gap:14px;font-size:14px;color:var(--muted)}
+.setup-rows .sr>span:first-child{width:80px;font-family:var(--mono);font-size:13px;letter-spacing:.15em;color:var(--muted)}
+.setup-rows input,.setup-rows select{
+  background:none;border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  font-family:var(--sans);font-size:14px;padding:7px 12px;outline:none;
+}
+.setup-rows input{width:90px}
+#intvStartBtn{margin-top:28px}
+#intvBackBtn{margin-top:14px;align-self:center}
+
+/* ---------- 管理面试官 ---------- */
+.persona-fold{width:100%;text-align:left;margin-top:26px;border-top:1px solid var(--line);padding-top:4px}
+.persona-fold .fold-head .notes-count{color:var(--faint)}
+.persona-style{min-height:110px}
+.persona-nums{display:flex;gap:18px;flex-wrap:wrap;padding:2px}
+.persona-nums .pn{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.persona-nums .pn>span{font-family:var(--mono);letter-spacing:.1em}
+.persona-nums input,.persona-nums select{
+  background:none;border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  font-family:var(--sans);font-size:13px;padding:5px 8px;outline:none;width:74px;
+}
+
+/* ---------- 开讲页：面试官面板 ---------- */
+.intv-panel{
+  padding:18px 20px 16px;border:1px solid var(--line-strong);border-radius:14px;
+  background:var(--surface);margin-bottom:18px;
+}
+.ip-head{
+  display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;
+  font-family:var(--mono);font-size:13px;color:var(--faint);margin-bottom:12px;
+}
+.ip-who{color:var(--muted);letter-spacing:.1em}
+.ip-round{margin-left:auto}
+.ip-pat b{color:var(--ink);font-weight:500}
+.ip-pat.low b{color:var(--red)}
+.ip-q{
+  font-family:var(--serif);font-weight:600;font-size:clamp(17px,2.2vw,21px);
+  line-height:1.75;color:var(--ink);
+}
+.ip-q.thinking{color:var(--faint);font-weight:400;font-family:var(--sans);font-size:15px}
+.ip-q .dots::after{content:'';animation:ipdots 1.2s steps(4,end) infinite}
+@keyframes ipdots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}}
+.ip-think,.ip-acts{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}
+.ip-think span{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.ip-think b{color:var(--ink);font-size:16px}
+.tp{
+  background:none;border:1px solid var(--line-strong);border-radius:999px;
+  font-size:13px;letter-spacing:.15em;color:var(--muted);padding:7px 16px;cursor:pointer;
+  transition:color .15s,border-color .15s;
+}
+.tp:hover{color:var(--ink);border-color:var(--ink)}
+.tp.go{color:var(--bg);background:var(--ink);border-color:var(--ink)}
+.tp.go:hover{opacity:.85}
+.ip-bar{height:2px;background:var(--line);border-radius:2px;margin-top:14px;overflow:hidden}
+.ip-bar i{display:block;height:100%;width:0;background:var(--green);transition:width .5s linear}
+.ip-bar i.over{background:var(--red)}
+/* 面试官的即时反应：沉默提示 / 扣分说明。有了它，面板才不会像卡住 */
+.ip-react{
+  margin-top:12px;font-family:var(--mono);font-size:13px;line-height:1.6;
+  letter-spacing:.08em;padding:2px 0;animation:ipreact .3s ease;
+}
+.ip-react[hidden]{display:none}
+.ip-react.watch{color:var(--muted)}
+.ip-react.warn{color:var(--amber)}
+.ip-react.bad{color:var(--red)}
+@keyframes ipreact{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+/* 被打断：描边闪一下红，跟文字配合 */
+.intv-panel.cut{animation:ipcut .9s var(--ease)}
+@keyframes ipcut{
+  0%,100%{border-color:var(--line-strong)}
+  25%,65%{border-color:var(--red)}
+}
+.ip-hist{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:12px}
+.ip-past{font-size:13px;line-height:1.75}
+.ipp-q{color:var(--ink)}
+.ipp-n{
+  display:inline-block;font-family:var(--mono);font-size:13px;color:var(--faint);
+  border:1px solid var(--line);border-radius:4px;padding:0 5px;margin-right:8px;
+}
+.ipp-a{color:var(--muted);margin-top:3px}
+.ipp-a.none{color:var(--faint)}
+.ipp-fb{color:var(--faint);font-size:13px;margin-top:3px}
+
+/* 耐心格：跟「当前分」并排，掉到三成以下转红 */
+.ls-score.patience>span{letter-spacing:.2em}
+.ls-score.patience b{font-size:22px}
+.ls-score.patience.low b{color:var(--red)}
+
+/* 瞄一眼简历 */
+.resume-view{width:min(560px,92vw)}
+.rv-text{
+  max-height:52vh;overflow:auto;white-space:pre-wrap;text-align:left;
+  font-family:var(--sans);font-size:14px;line-height:1.9;color:var(--ink);
+}
+@media(max-width:560px){
+  .free-hero{padding:36px 0 28px}
+  #intvToSetupBtn,#intvStartBtn{margin-top:20px}
+  .ip-head{gap:10px}
+}

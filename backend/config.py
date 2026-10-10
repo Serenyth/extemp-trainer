@@ -4,8 +4,8 @@ import pathlib
 import tomllib
 import tomli_w
 
-ROOT = pathlib.Path(__file__).resolve().parent
-DATA = ROOT / "data"
+from paths import DATA
+
 CONFIG_PATH = DATA / "config.toml"
 
 DEFAULTS = {
@@ -59,6 +59,9 @@ DEFAULTS = {
         "filler_scoring": False,
         "filler_threshold": 8,  # 次/分钟，超出部分每2次扣1分
         "hint_penalty": 5,      # 主动点「提示」换一条方向建议的扣分；0=不扣分
+        "stuck_penalty_on": True,   # 卡壳（沉默）要不要扣分
+        "stuck_penalty": 3,         # 每次卡壳扣几分；0=只统计不扣分
+        "stuck_penalty_sec": 0,     # 沉默多久扣一次；0=跟下面的「卡壳判定」同一个秒数
         "auto_pause": True,     # 看稿/提示时自动暂停计时（看稿看完、提示拿到就自动继续）
         "ready_countdown": 3,   # 开讲前的准备倒计时（秒）；0=不倒计时，点了就直接开始
         "auto_start_sec": 5,    # 备稿倒计时归零后，再倒数这么多秒自动开讲；0=不自动，等你手动点
@@ -68,6 +71,43 @@ DEFAULTS = {
         "wpm_fast": 330,        # 语速超过多少（字/分钟）提醒放慢
         "wpm_slow": 0,          # 语速低于多少（字/分钟）提醒提速；0=不提醒
         "filler_burst": 3,      # 最近 200 字内同一口头禅出现几次就提醒
+    },
+    # 训练模式。历史记录按 mode 归档，趋势与「对比上一场」必须在同一模式内算
+    # （命题演讲的分数和朗读练习的分数不是一回事，跨模式比较会得出错误结论；
+    #  自由练习干脆不评分，score 为 None）
+    "modes": {
+        "current": "extemp",
+        "names": {"extemp": "命题演讲", "read": "朗读练习", "free": "自由练习",
+                  "interview": "面试模拟"},
+        # 朗读练习的计分：跟命题演讲一样是「基础 100 往下扣」，但扣的是漏读/错读/重复。
+        # 每一项都有上限，免得一篇长文漏几个字就被扣到 0 分——那只会让人不敢开口
+        "read": {
+            "leak_penalty": 1,      # 每漏读 1 字扣分
+            "err_penalty": 0.5,     # 每错读（改字/多字）1 处扣分
+            "repeat_penalty": 2,    # 每重复一次扣分
+            "leak_cap": 40,
+            "err_cap": 30,
+            "repeat_cap": 20,
+        },
+        # 面试模拟。思考时间默认由人设给（HR 15 秒、压力面只有 8 秒），
+        # 这里填的是「不跟着人设走」时用的固定值
+        "interview": {
+            "persona": "hr",        # 默认人设；每场可以在设置页改
+            "think_enabled": True,  # 面试官给不给思考时间
+            "think_sec": 0,         # 0 = 跟着人设走
+            "extend_sec": 10,       # 主动讨要一次能加多少秒（代价是掉耐心）
+            "suggest_sec": 90,      # 单轮建议时长，超时后持续掉耐心
+            "stuck_sec": 6,         # 卡壳判定：面试里想 5 秒是常事，比演讲的 3 秒长
+            "auto_probe": True,     # 卡到判定线时让面试官自己接话（追问/换角度/施压）
+            # 耐心扣减。初始耐心由人设给（压力面本来就薄）
+            "patience": {
+                "stuck": 8,             # 卡壳一次
+                "extend": 2,            # 主动讨要思考时间，每多要 1 秒
+                "overtime": 5,          # 超过建议时长后，每 10 秒
+                "low_relevance": 15,    # 这一轮被判为答非所问（relevance < 60）
+                "hint": 6,              # 点一次「提示」
+            },
+        },
     },
     # 开讲页的文字大小与转写排版：只影响显示层，不影响统计
     "display": {
